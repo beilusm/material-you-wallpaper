@@ -1,9 +1,11 @@
 import './styles/main.css';
 import { setupControls } from './ui/controls.js';
 import { renderWallpaper } from './core/renderer.js';
+import { setupMockupOverlay } from './ui/mockup.js';
 
 // 应用根状态
 const state = {
+  artMode: 'waves', // 'waves' | 'pebbles' | 'topography'
   targetW: 2736,
   targetH: 1824,
   color1: '#b2ccc1',
@@ -13,6 +15,8 @@ const state = {
   curvature: 0.42,
   harmonics: 1,
   hasShadow: false,
+  useGradient: false,
+  grain: 0.0,
   seed: 42,
   waveParams: []
 };
@@ -21,6 +25,9 @@ const canvas = document.getElementById('wallpaperCanvas');
 const ctx = canvas.getContext('2d');
 const wrapper = document.getElementById('canvasWrapper');
 const viewport = document.getElementById('viewport');
+
+// 桌面挂件透视覆盖层
+const mockupManager = setupMockupOverlay(wrapper);
 
 /**
  * 根据容器比例与目标分辨率适配预览画布
@@ -68,7 +75,7 @@ function handleStateChange(needsLayoutResize = false) {
 }
 
 // 初始化
-setupControls(state, handleStateChange);
+setupControls(state, handleStateChange, mockupManager);
 updateCanvasLayout();
 draw();
 

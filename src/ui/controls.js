@@ -1,15 +1,32 @@
-import { PALETTES, deriveHarmoniousPair } from '../constants/palettes.js';
+import { PALETTES, generateRandomHarmoniousPalette } from '../constants/palettes.js';
 import { RESOLUTION_PRESETS } from '../constants/presets.js';
 import { generateWaveParameters } from '../core/geometry.js';
-import { exportToPNGBlob } from '../core/renderer.js';
+import { exportToPNGBlob, copyImageToClipboard } from '../core/renderer.js';
 import { exportToSVGFile } from '../core/svg-exporter.js';
+import { extractPaletteFromImage } from '../core/extractor.js';
+import { HistoryManager } from '../core/history.js';
 import { showToast } from './toast.js';
 
-export function setupControls(state, onStateChange) {
-  // 1. 初始化波浪随机参数
+export function setupControls(state, onStateChange, mockupManager) {
+  const history = new HistoryManager(25);
+  history.push(state);
+
+  // 初始化波浪随机参数
   state.waveParams = generateWaveParameters(state.seed);
 
-  // 2. 渲染调色板预设
+  // 1. 艺术形态模式切换 (Tabs)
+  const modeTabs = document.querySelectorAll('.mode-tab');
+  modeTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      modeTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      state.artMode = tab.dataset.mode;
+      commitStateChange();
+      showToast(`切换至形态：${tab.textContent.trim()}`, 1200);
+    });
+  });
+
+  // 2. 调色板预设渲染
   const paletteGrid = document.getElementById('paletteGrid');
   paletteGrid.innerHTML = '';
 
@@ -31,7 +48,7 @@ export function setupControls(state, onStateChange) {
       state.color2 = p.c2;
       document.getElementById('color1Input').value = p.c1;
       document.getElementById('color2Input').value = p.c2;
-      onStateChange();
+      commitStateChange();
     });
     paletteGrid.appendChild(btn);
   });
@@ -43,14 +60,16 @@ export function setupControls(state, onStateChange) {
   c1Input.addEventListener('input', (e) => {
     state.color1 = e.target.value;
     document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
-    onStateChange();
+    commitStateChange(false, false);
   });
+  c1Input.addEventListener('change', () => commitStateChange());
 
   c2Input.addEventListener('input', (e) => {
     state.color2 = e.target.value;
     document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
-    onStateChange();
+    commitStateChange(false, false);
   });
+  c2Input.addEventListener('change', () => commitStateChange());
 
   document.getElementById('swapColorsBtn').addEventListener('click', () => {
     const temp = state.color1;
@@ -58,7 +77,43 @@ export function setupControls(state, onStateChange) {
     state.color2 = temp;
     c1Input.value = state.color1;
     c2Input.value = state.color2;
-    onStateChange();
+    commitStateChange();
+  });
+
+  // 随机灵感配色
+  document.getElementById('randomPaletteBtn').addEventListener('click', () => {
+    const pair = generateRandomHarmoniousPalette();
+    state.color1 = pair.c1;
+    state.color2 = pair.c2;
+    c1Input.value = pair.c1;
+    c2Input.value = pair.c2;
+    document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+    commitStateChange();
+    showToast('🎨 已生成一组自然灵感配色！', 1500);
+  });
+
+  // 智能图片取色
+  const imgFileInput = document.getElementById('imgFileInput');
+  document.getElementById('extractFromImgBtn').addEventListener('click', () => {
+    imgFileInput.click();
+  });
+  imgFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      showToast('正在分析图片提取色系...');
+      const pair = await extractPaletteFromImage(file);
+      state.color1 = pair.c1;
+      state.color2 = pair.c2;
+      c1Input.value = pair.c1;
+      c2Input.value = pair.c2;
+      document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+      commitStateChange();
+      showToast('✓ 成功提取图片配色！');
+    } catch {
+      showToast('图片分析失败，请换一张试一下');
+    }
+    imgFileInput.value = '';
   });
 
   // 4. 滑块控制
@@ -66,35 +121,52 @@ export function setupControls(state, onStateChange) {
   const angleSlider = document.getElementById('angleSlider');
   const curvSlider = document.getElementById('curvSlider');
   const freqSlider = document.getElementById('freqSlider');
+  const grainSlider = document.getElementById('grainSlider');
 
   bandSlider.addEventListener('input', (e) => {
     state.bandCount = parseInt(e.target.value, 10);
     document.getElementById('bandCountVal').textContent = state.bandCount;
-    onStateChange();
+    commitStateChange(false, false);
   });
+  bandSlider.addEventListener('change', () => commitStateChange());
 
   angleSlider.addEventListener('input', (e) => {
     state.angle = parseInt(e.target.value, 10);
     document.getElementById('angleVal').textContent = `${state.angle}°`;
-    onStateChange();
+    commitStateChange(false, false);
   });
+  angleSlider.addEventListener('change', () => commitStateChange());
 
   curvSlider.addEventListener('input', (e) => {
     state.curvature = parseInt(e.target.value, 10) / 100;
     document.getElementById('curvVal').textContent = `${e.target.value}%`;
-    onStateChange();
+    commitStateChange(false, false);
   });
+  curvSlider.addEventListener('change', () => commitStateChange());
 
   const freqLabels = ['简约单峰 (1x)', '双重流线 (2x)', '自然水波 (3x)'];
   freqSlider.addEventListener('input', (e) => {
     state.harmonics = parseInt(e.target.value, 10);
     document.getElementById('freqVal').textContent = freqLabels[state.harmonics - 1];
-    onStateChange();
+    commitStateChange(false, false);
   });
+  freqSlider.addEventListener('change', () => commitStateChange());
+
+  grainSlider.addEventListener('input', (e) => {
+    state.grain = parseInt(e.target.value, 10) / 100;
+    document.getElementById('grainVal').textContent = `${e.target.value}%`;
+    commitStateChange(false, false);
+  });
+  grainSlider.addEventListener('change', () => commitStateChange());
 
   document.getElementById('shadowToggle').addEventListener('change', (e) => {
     state.hasShadow = e.target.checked;
-    onStateChange();
+    commitStateChange();
+  });
+
+  document.getElementById('gradientToggle').addEventListener('change', (e) => {
+    state.useGradient = e.target.checked;
+    commitStateChange();
   });
 
   // 5. 分辨率预设渲染
@@ -115,7 +187,7 @@ export function setupControls(state, onStateChange) {
       btn.classList.add('active');
       state.targetW = res.w;
       state.targetH = res.h;
-      onStateChange(true); // 改变尺寸通知更新画布宽高
+      commitStateChange(true);
     });
     resGrid.appendChild(btn);
   });
@@ -127,14 +199,76 @@ export function setupControls(state, onStateChange) {
     angleSlider.value = state.angle;
     document.getElementById('angleVal').textContent = `${state.angle}°`;
     state.waveParams = generateWaveParameters(state.seed);
-    onStateChange();
-    showToast('🎲 已随机生成新形态！', 1500);
+    commitStateChange();
+    showToast('🎲 换了一个新造型！', 1200);
   }
 
   document.getElementById('randomBtn').addEventListener('click', randomize);
   document.getElementById('quickRandomBtn').addEventListener('click', randomize);
 
-  // 7. 面板折叠切换
+  // 7. 撤销 / 重做
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+
+  function updateUndoRedoUI() {
+    if (undoBtn) undoBtn.disabled = !history.canUndo();
+    if (redoBtn) redoBtn.disabled = !history.canRedo();
+  }
+
+  function applySnapshot(snap) {
+    Object.assign(state, snap);
+    state.waveParams = generateWaveParameters(state.seed);
+
+    // 同步 UI 控件状态
+    modeTabs.forEach(t => t.classList.toggle('active', t.dataset.mode === state.artMode));
+    c1Input.value = state.color1;
+    c2Input.value = state.color2;
+    bandSlider.value = state.bandCount;
+    document.getElementById('bandCountVal').textContent = state.bandCount;
+    angleSlider.value = state.angle;
+    document.getElementById('angleVal').textContent = `${state.angle}°`;
+    curvSlider.value = Math.round(state.curvature * 100);
+    document.getElementById('curvVal').textContent = `${curvSlider.value}%`;
+    freqSlider.value = state.harmonics;
+    document.getElementById('freqVal').textContent = freqLabels[state.harmonics - 1];
+    grainSlider.value = Math.round(state.grain * 100);
+    document.getElementById('grainVal').textContent = `${grainSlider.value}%`;
+    document.getElementById('shadowToggle').checked = state.hasShadow;
+    document.getElementById('gradientToggle').checked = state.useGradient;
+
+    onStateChange(true);
+    updateUndoRedoUI();
+  }
+
+  if (undoBtn) {
+    undoBtn.addEventListener('click', () => {
+      const snap = history.undo();
+      if (snap) {
+        applySnapshot(snap);
+        showToast('↶ 已撤销');
+      }
+    });
+  }
+
+  if (redoBtn) {
+    redoBtn.addEventListener('click', () => {
+      const snap = history.redo();
+      if (snap) {
+        applySnapshot(snap);
+        showToast('↷ 已重做');
+      }
+    });
+  }
+
+  function commitStateChange(needsLayoutResize = false, pushHistory = true) {
+    if (pushHistory) {
+      history.push(state);
+      updateUndoRedoUI();
+    }
+    onStateChange(needsLayoutResize);
+  }
+
+  // 8. 面板折叠
   const panel = document.getElementById('panel');
   document.getElementById('togglePanelBtn').addEventListener('click', () => {
     panel.classList.toggle('collapsed');
@@ -143,30 +277,51 @@ export function setupControls(state, onStateChange) {
     panel.classList.add('collapsed');
   });
 
-  // 8. 导出与下载
+  // 9. 桌面挂件模拟透视 (Mockup)
+  const mockupBtn = document.getElementById('toggleMockupBtn');
+  if (mockupBtn) {
+    mockupBtn.addEventListener('click', () => {
+      const isActive = mockupManager.toggle();
+      mockupBtn.classList.toggle('active', isActive);
+      showToast(isActive ? '🖥️ 桌面挂件透视已开启' : '关闭桌面挂件透视', 1200);
+    });
+  }
+
+  // 10. 导出与下载
   async function downloadPNG() {
     showToast(`正在导出 ${state.targetW} × ${state.targetH} 高清壁纸...`, 2000);
     const blob = await exportToPNGBlob(state, state.targetW, state.targetH);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `material_you_${state.targetW}x${state.targetH}_${state.seed}.png`;
+    a.download = `material_you_${state.artMode}_${state.targetW}x${state.targetH}_${state.seed}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`✓ 已成功保存 ${state.targetW}×${state.targetH} PNG！`);
+    showToast(`✓ 已成功下载 ${state.targetW}×${state.targetH} 壁纸！`);
   }
 
   function downloadSVG() {
     exportToSVGFile(state, state.targetW, state.targetH);
-    showToast('✓ 已成功保存矢量 SVG！');
+    showToast('✓ 已导出矢量 SVG！');
+  }
+
+  async function copyClipboard() {
+    try {
+      showToast('正在渲染并复制到剪贴板...');
+      await copyImageToClipboard(state, state.targetW, state.targetH);
+      showToast('📋 已成功复制壁纸图片到剪贴板！');
+    } catch {
+      showToast('复制失败，请点击下载保存图片');
+    }
   }
 
   document.getElementById('downloadPngBtn').addEventListener('click', downloadPNG);
   document.getElementById('downloadSvgBtn').addEventListener('click', downloadSVG);
+  document.getElementById('copyClipboardBtn').addEventListener('click', copyClipboard);
 
-  // 9. 全局快捷键
+  // 11. 全局快捷键
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Space') {
@@ -174,9 +329,22 @@ export function setupControls(state, onStateChange) {
       randomize();
     } else if (e.key === 'h' || e.key === 'H') {
       panel.classList.toggle('collapsed');
-    } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    } else if (e.key === 'm' || e.key === 'M') {
+      mockupBtn.click();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        if (redoBtn) redoBtn.click();
+      } else {
+        if (undoBtn) undoBtn.click();
+      }
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+      copyClipboard();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       downloadPNG();
     }
   });
+
+  updateUndoRedoUI();
 }

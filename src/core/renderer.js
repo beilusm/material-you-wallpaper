@@ -1,52 +1,29 @@
-import { calculateBandPolygon } from './geometry.js';
+import { renderWaves } from './modes/waves.js';
+import { renderPebbles } from './modes/pebbles.js';
+import { renderTopography } from './modes/topography.js';
+import { applyFilmGrain } from './effects.js';
 
 /**
- * 在目标 2D 上下文上绘制完整的 Material You 壁纸
+ * 核心调度渲染管线
  */
 export function renderWallpaper(ctx, state, width, height) {
-  const colors = [state.color2, state.color1];
+  // 1. 根据当前艺术模式调度对应的绘制引擎
+  switch (state.artMode) {
+    case 'pebbles':
+      renderPebbles(ctx, state, width, height);
+      break;
+    case 'topography':
+      renderTopography(ctx, state, width, height);
+      break;
+    case 'waves':
+    default:
+      renderWaves(ctx, state, width, height);
+      break;
+  }
 
-  // 1. 底色全屏覆盖
-  ctx.fillStyle = colors[0];
-  ctx.fillRect(0, 0, width, height);
-
-  // 2. 依次叠加绘制每道波浪
-  for (let i = 1; i < state.bandCount; i++) {
-    const waveParam = state.waveParams[i % state.waveParams.length];
-    const { polygon, nx, ny, Ln } = calculateBandPolygon({
-      index: i,
-      totalBands: state.bandCount,
-      width,
-      height,
-      angleDeg: state.angle,
-      curvature: state.curvature,
-      harmonics: state.harmonics,
-      waveParam,
-      steps: 160
-    });
-
-    ctx.beginPath();
-    ctx.moveTo(polygon[0].x, polygon[0].y);
-    for (let j = 1; j < polygon.length; j++) {
-      ctx.lineTo(polygon[j].x, polygon[j].y);
-    }
-    ctx.closePath();
-
-    // 层次阴影 (Material 3 Paper Elevation)
-    if (state.hasShadow) {
-      ctx.shadowColor = 'rgba(18, 28, 22, 0.14)';
-      ctx.shadowBlur = Ln * 0.018;
-      ctx.shadowOffsetX = -nx * 6;
-      ctx.shadowOffsetY = -ny * 6;
-    } else {
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-    }
-
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.fill();
+  // 2. 叠加热力胶片颗粒噪点特效 (Film Grain)
+  if (state.grain > 0) {
+    applyFilmGrain(ctx, width, height, state.grain);
   }
 }
 
@@ -66,4 +43,17 @@ export function exportToPNGBlob(state, width, height) {
       resolve(blob);
     }, 'image/png');
   });
+}
+
+/**
+ * 复制生成的超清图片直接到系统剪贴板 (免去保存与查找步骤)
+ */
+export async function copyImageToClipboard(state, width, height) {
+  const blob = await exportToPNGBlob(state, width, height);
+  if (!navigator.clipboard || !window.ClipboardItem) {
+    throw new Error('当前浏览器不支持直接复制图片到剪贴板');
+  }
+  await navigator.clipboard.write([
+    new ClipboardItem({ 'image/png': blob })
+  ]);
 }

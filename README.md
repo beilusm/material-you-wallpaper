@@ -1,71 +1,28 @@
 # Material You 极简波浪壁纸工坊 (Material You Wallpaper Studio)
 
-面向高分辨率显示屏（如 Surface 3:2 2736×1824、4K、5.4K Retina）的纯前端算法驱动壁纸设计与导出工程。完全遵循 Google Material 3 / Material You 极简波浪美学，杜绝 AI 生图的杂乱噪点与失真。
+面向高分辨率显示屏（如 Surface 3:2 2736×1824、4K、5.4K Retina）的纯前端算法驱动壁纸设计与导出工程。完全遵循 Google Material 3 / Material You 极简美学，杜绝 AI 生图的杂乱噪点与失真。
 
 ---
 
-## 🌟 核心特性
+## 🌟 核心特性与艺术功能
 
-- **纯前端矢量几何计算**：基于参数化调和正弦波与旋转投影算法，保证边缘绝对平滑纯粹。
-- **点对点像素输出**：预设 `2736 × 1824`（3:2 屏幕点对点匹配，告别系统低分辨率提示）、`5472 × 3648`（5.4K 超高清视网膜）、`3840 × 2160`（4K UHD）等。
-- **双模态无损导出**：
-  - 📥 **高清 PNG**：基于离线高精度 Canvas 渲染，零画质损失。
-  - 📐 **矢量 SVG**：输出纯净 XML 矢量路径，无限放大永不失真。
-- **Material You 色彩美学**：内置原版鼠尾草绿、薰衣草、冰川蓝、浅抹茶、暖暮沙、墨夜深色等自然色调，支持自定义颜色与色彩互换。
-- **现代化工程化架构**：基于 Vite + 原生 ES Modules，极速构建，模块解耦，开箱即用。
-
----
-
-## 📁 项目结构
-
-```text
-material-you-wallpaper/
-├── index.html              # HTML5 应用入口
-├── package.json            # 工程依赖与 npm 脚本
-├── .npmrc                  # 包管理构建配置
-├── .gitignore              # Git 忽略规则
-├── public/                 # 静态资源目录
-│   └── favicon.svg         # 矢量 Favicon
-├── src/                    # 源码目录
-│   ├── main.js             # 应用引导与视口自适应
-│   ├── styles/             # 样式系统
-│   │   ├── tokens.css      # Material 3 基础 Token（色阶、圆角、阴影）
-│   │   ├── main.css        # 全局视口与画布容器排版
-│   │   └── components.css  # 侧边栏、卡片、滑块与悬浮控制钮
-│   ├── constants/          # 常量配置
-│   │   ├── palettes.js     # 预设自然调色板与色彩和谐算法
-│   │   └── presets.js      # 设备分辨率列表 (Surface, 4K, 2K, 手机)
-│   ├── core/               # 核心算法模块
-│   │   ├── geometry.js     # 旋转投影、多重谐波波浪与封闭多边形计算
-│   │   ├── renderer.js     # 高精度 Canvas 绘制与离线渲染导出引擎
-│   │   └── svg-exporter.js # 矢量 SVG 生成引擎
-│   └── ui/                 # 交互逻辑模块
-│       ├── controls.js     # 控制面板交互、滑块联动与键盘快捷键
-│       └── toast.js        # 现代化消息吐司提示
-└── dist/                   # 生产打包构建产物
-```
-
----
-
-## 🚀 快速上手与运行
-
-### 1. 开发环境运行 (支持 HMR 热更新)
-```bash
-pnpm dev
-# 或 npm run dev
-```
-打开浏览器访问控制台输出的本地服务地址（如 `http://localhost:5173/`）。
-
-### 2. 生产打包
-```bash
-pnpm build
-```
-打包产物将输出至 `dist/` 目录，可直接用任何静态网页服务器托管。
-
-### 3. 生产产物本地预览
-```bash
-pnpm preview
-```
+- **多形态艺术模式**：
+  - 🌊 **极简波浪 (Waves)**：纯净温润的大色块正弦谐波流线（100% 还原原版质感）。
+  - 🫧 **有机圆石 (Pebbles)**：Android 12/13/14 标志性平滑闭合样条有机斑块。
+  - ⛰️ **层次等高线 (Topography)**：层叠纸艺高低起伏等高线，营造自然空间感。
+- **质感与光影材质**：
+  - 🎞️ **胶片颗粒质感 (Film Grain)**：可调微细噪点（0% ~ 25%），赋予数码矢量实体哑光纸质质感。
+  - 🌈 **双色平滑渐变 (Gradient Flow)**：支持带状与径向色彩缓动过渡。
+  - 📄 **纸艺微阴影 (Paper Depth)**：高精度层级柔光阴影，层次分明。
+- **智慧色彩系统**：
+  - 🎨 **12 款精选调色板**：鼠尾草绿、宇治抹茶、普罗旺斯薰衣草、冰川蓝、暮沙暖杏、早樱初粉、深夜墨绿等。
+  - 🖼️ **图片智能取色**：支持拖拽或上传本地照片，一键提取出高低明度比的和谐 Monet 色系。
+  - 🎲 **灵感算法配色**：基于 HSL / CAM16 色彩美学算法，一键随机匹配高质感色系。
+- **高能效率工具**：
+  - 🖥️ **桌面挂件透视 (Mockup)**：一键开启桌面时钟、日历与 Dock 栏预览，实时检验壁纸在真实桌面下的文字易读性。
+  - 📋 **直接复制图片**：无需下载保存即可直接将超清壁纸拷入系统剪贴板。
+  - ↶ **历史快照回退**：支持撤销 (Ctrl+Z) 与重做 (Ctrl+Shift+Z)，随机换造型不怕错过心仪作品。
+  - 📐 **双模态导出**：点对点超清 PNG + 无限分辨率矢量 SVG。
 
 ---
 
@@ -73,21 +30,46 @@ pnpm preview
 
 | 快捷键 | 功能描述 |
 | :--- | :--- |
-| `Space (空格键)` | 随机生成全新几何形态与角度 (🎲 换一个) |
-| `H` | 隐藏 / 呼出侧边栏控制面板 (纯净预览) |
-| `Ctrl + S` / `Cmd + S` | 快速导出当前分辨率高清 PNG 壁纸 |
+| `Space (空格键)` | 🎲 随机生成新形态与角度 (换一个) |
+| `M` | 🖥️ 开启 / 关闭桌面挂件透视预览 |
+| `H` | ⚙️ 隐藏 / 显示侧边栏控制面板 |
+| `Ctrl + Z` / `Cmd + Z` | ↶ 撤销上一次的调整 |
+| `Ctrl + Shift + Z` | ↷ 重做 |
+| `Ctrl + C` / `Cmd + C` | 📋 直接复制当前壁纸到剪贴板 |
+| `Ctrl + S` / `Cmd + S` | 📥 快速下载所选分辨率的高清 PNG |
 
 ---
 
-## 🛠️ 后续迭代路线图 (Roadmap)
+## 📁 模块架构
 
-1. **更多 Material 几何图案**：
-   - 鹅卵石波点 (Material You Organic Pebbles)
-   - 渐变立体缎带 (Fluid Gradient Ribbons)
-   - 极简多重折叠 (Minimalist Paper Fold)
-2. **质感着色增强**：
-   - 模拟自然胶片颗粒噪点 (Subtle Film Grain Texture)
-   - 双色线性/径向平滑渐变映射
-3. **Linux / Hyprland 本地自动化脚本**：
-   - 编写 Node/Python CLI 工具，支持终端执行直接生成壁纸并通过 `swww` 或 `hyprpaper` 换壁纸：
-     `pnpm wall:apply --seed 123`
+```text
+src/
+├── core/
+│   ├── modes/
+│   │   ├── waves.js        # 极简波浪流线
+│   │   ├── pebbles.js      # 有机圆石斑块
+│   │   └── topography.js   # 等高线纸艺层叠
+│   ├── effects.js          # 胶片颗粒与渐变计算
+│   ├── geometry.js         # 旋转投影与调和波形数学
+│   ├── extractor.js        # 图片智能取色提取器
+│   ├── history.js          # 历史快照与撤销重做栈
+│   ├── renderer.js         # Canvas 多重调度渲染引擎
+│   └── svg-exporter.js     # 矢量 SVG 导出引擎
+├── ui/
+│   ├── controls.js         # 交互面板与全局快捷键
+│   ├── mockup.js           # 真实桌面小组件模拟层
+│   └── toast.js            # 消息通知
+└── constants/
+    ├── palettes.js         # 12 种调色板与算法配色
+    └── presets.js          # 屏幕分辨率预设
+```
+
+---
+
+## 🚀 部署与运行
+
+```bash
+pnpm dev    # 本地启动
+pnpm build  # 生产编译
+```
+本项目已开启 GitHub Actions，推送到 `main` 分支即可自动发布到 GitHub Pages。

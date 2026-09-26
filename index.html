@@ -23,7 +23,10 @@
     <button class="fab" id="quickRandomBtn" title="快捷键: 空格键">
       <span>🎲</span> 换一个 (空格)
     </button>
-    <button class="fab" id="togglePanelBtn">
+    <button class="fab" id="toggleMockupBtn" title="快捷键: M">
+      <span>🖥️</span> 桌面挂件透视
+    </button>
+    <button class="fab" id="togglePanelBtn" title="快捷键: H">
       <span>⚙️</span> 调节参数 / 下载
     </button>
   </div>
@@ -34,20 +37,45 @@
       <div class="panel-title">
         <span>Material You</span> 壁纸工坊
       </div>
-      <button class="swap-btn" id="closePanelBtn" title="折叠面板">✕</button>
+      <div class="header-actions">
+        <button class="icon-btn" id="undoBtn" title="撤销 (Ctrl+Z)">↶</button>
+        <button class="icon-btn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">↷</button>
+        <button class="icon-btn" id="closePanelBtn" title="折叠面板 (H)">✕</button>
+      </div>
     </div>
 
     <div class="panel-content">
+      <!-- 艺术形态模式切换 -->
+      <section>
+        <div class="section-title">艺术形态 (Style Mode)</div>
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="waves">🌊 极简波浪</button>
+          <button class="mode-tab" data-mode="pebbles">🫧 有机圆石</button>
+          <button class="mode-tab" data-mode="topography">⛰️ 层次等高线</button>
+        </div>
+      </section>
+
       <!-- 预设调色板 -->
       <section>
         <div class="section-title">色彩方案 (Material Palette)</div>
         <div class="palette-grid" id="paletteGrid"></div>
+
+        <div class="color-action-row">
+          <button class="action-chip" id="randomPaletteBtn">
+            <span>🎨</span> 灵感配色
+          </button>
+          <button class="action-chip" id="extractFromImgBtn">
+            <span>🖼️</span> 上传图片取色
+          </button>
+          <input type="file" id="imgFileInput" accept="image/*" style="display: none;">
+        </div>
+
         <div class="custom-colors">
           <div class="color-picker-item">
             <input type="color" id="color1Input" value="#b2ccc1">
             <span>色彩 A</span>
           </div>
-          <button class="swap-btn" id="swapColorsBtn" title="交换色彩">⇄</button>
+          <button class="icon-btn" id="swapColorsBtn" title="交换色彩">⇄</button>
           <div class="color-picker-item">
             <input type="color" id="color2Input" value="#e7f2ed">
             <span>色彩 B</span>
@@ -55,13 +83,13 @@
         </div>
       </section>
 
-      <!-- 几何参数 -->
+      <!-- 几何与质感参数 -->
       <section>
-        <div class="section-title">简约曲线形态</div>
+        <div class="section-title">几何与质感控制</div>
         <div class="control-group">
           <div class="slider-item">
             <div class="slider-label">
-              <span>波浪条带数量</span>
+              <span>层次条带数量</span>
               <span class="slider-value" id="bandCountVal">4</span>
             </div>
             <input type="range" id="bandCountSlider" min="2" max="6" step="1" value="4">
@@ -91,8 +119,24 @@
             <input type="range" id="freqSlider" min="1" max="3" step="1" value="1">
           </div>
 
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>胶片颗粒质感 (Film Grain)</span>
+              <span class="slider-value" id="grainVal">0%</span>
+            </div>
+            <input type="range" id="grainSlider" min="0" max="25" step="1" value="0">
+          </div>
+
           <label class="switch-row">
-            <span>层次柔和阴影 (Paper Depth)</span>
+            <span>双色平滑渐变 (Gradient Flow)</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="gradientToggle">
+              <span class="slider-round"></span>
+            </div>
+          </label>
+
+          <label class="switch-row">
+            <span>纸艺层次微阴影 (Paper Depth)</span>
             <div class="toggle-switch">
               <input type="checkbox" id="shadowToggle">
               <span class="slider-round"></span>
@@ -111,14 +155,17 @@
     <!-- 底部操作区 -->
     <div class="panel-footer">
       <button class="btn btn-random" id="randomBtn">
-        <span>🎲</span> 随机生成新造型 (Space)
+        <span>🎲</span> 随机新造型 (Space)
       </button>
       <div class="btn-row">
         <button class="btn btn-primary" id="downloadPngBtn">
           <span>📥</span> 下载高清 PNG
         </button>
+        <button class="btn btn-secondary" id="copyClipboardBtn" title="直接复制到剪贴板 (Ctrl+C)">
+          <span>📋</span> 复制图片
+        </button>
         <button class="btn btn-secondary" id="downloadSvgBtn" title="矢量格式，任意缩放不失真">
-          <span>📐</span> 导出 SVG
+          <span>📐</span> SVG
         </button>
       </div>
     </div>
