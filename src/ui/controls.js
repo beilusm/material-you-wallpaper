@@ -31,7 +31,9 @@ export function setupControls(state, onStateChange, mockupManager) {
       tab.classList.add('active');
       state.artMode = tab.dataset.mode;
       commitStateChange();
-      showToast(`形态：${tab.textContent.trim()}`, 1200);
+      const label = tab.querySelector('span:not(.material-symbols-rounded)')?.textContent.trim() || tab.textContent.trim();
+      const icon = tab.querySelector('.material-symbols-rounded')?.textContent.trim() || 'category';
+      showToast(`艺术形态：${label}`, 1200, icon);
     });
   });
 
@@ -103,7 +105,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
     syncTheme();
     commitStateChange();
-    showToast('🎨 已生成灵感配色！', 1200);
+    showToast('已生成灵感配色', 1200, 'palette');
   }
   document.getElementById('randomPaletteBtn').addEventListener('click', triggerRandomPalette);
 
@@ -116,7 +118,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      showToast('正在分析图片提取色阶...');
+      showToast('正在分析图片提取色阶...', 2000, 'image_search');
       const pair = await extractPaletteFromImage(file);
       state.color1 = pair.c1;
       state.color2 = pair.c2;
@@ -125,20 +127,26 @@ export function setupControls(state, onStateChange, mockupManager) {
       document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
       syncTheme();
       commitStateChange();
-      showToast('✓ 成功提取图片配色！');
+      showToast('成功提取图片配色！', 2000, 'check_circle');
     } catch {
-      showToast('图片分析失败，请换一张试一下');
+      showToast('图片分析失败，请换一张试一下', 2500, 'error');
     }
     imgFileInput.value = '';
   });
 
-  // 深浅主题切换
+  // 深浅主题切换 (Material Symbols Rounded 图标切换)
   const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const themeIcon = document.getElementById('themeIcon');
+  if (themeIcon) {
+    themeIcon.textContent = state.isDark ? 'dark_mode' : 'light_mode';
+  }
   themeToggleBtn.addEventListener('click', () => {
     state.isDark = !state.isDark;
-    themeToggleBtn.textContent = state.isDark ? '☀️' : '🌙';
+    if (themeIcon) {
+      themeIcon.textContent = state.isDark ? 'dark_mode' : 'light_mode';
+    }
     syncTheme();
-    showToast(state.isDark ? '切换至深色模式' : '切换至浅色模式', 1200);
+    showToast(state.isDark ? '已切换至深色模式' : '已切换至浅色模式', 1200, state.isDark ? 'dark_mode' : 'light_mode');
   });
 
   // 5. 滑块控制 (Compose Sliders)
@@ -242,13 +250,13 @@ export function setupControls(state, onStateChange, mockupManager) {
         state.targetW = 2736;
         state.targetH = 1824;
         state.angle = -35;
-        showToast('📐 已切换为电脑横屏 (3:2)', 1200);
+        showToast('已切换为电脑横屏 (3:2)', 1200, 'laptop');
       } else {
         // 切为竖屏 1080×2400
         state.targetW = 1080;
         state.targetH = 2400;
         state.angle = -55;
-        showToast('📱 已切换为手机竖屏 (9:20)', 1200);
+        showToast('已切换为手机竖屏 (9:20)', 1200, 'smartphone');
       }
       angleSlider.value = state.angle;
       document.getElementById('angleVal').textContent = `${state.angle}°`;
@@ -268,7 +276,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     document.getElementById('angleVal').textContent = `${state.angle}°`;
     state.waveParams = generateWaveParameters(state.seed);
     commitStateChange();
-    showToast('🎲 换了一个新造型！', 1000);
+    showToast('已生成全新造型', 1000, 'casino');
   }
 
   document.getElementById('randomBtn').addEventListener('click', randomize);
@@ -315,7 +323,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       const snap = history.undo();
       if (snap) {
         applySnapshot(snap);
-        showToast('↶ 已撤销');
+        showToast('已撤销', 1000, 'undo');
       }
     });
   }
@@ -325,7 +333,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       const snap = history.redo();
       if (snap) {
         applySnapshot(snap);
-        showToast('↷ 已重做');
+        showToast('已重做', 1000, 'redo');
       }
     });
   }
@@ -406,13 +414,13 @@ export function setupControls(state, onStateChange, mockupManager) {
     mockupBtn.addEventListener('click', () => {
       const isActive = mockupManager.toggle();
       mockupBtn.classList.toggle('active', isActive);
-      showToast(isActive ? '🖥️ 桌面挂件已开启' : '关闭桌面挂件', 1000);
+      showToast(isActive ? '已开启桌面预览' : '已关闭桌面预览', 1000, 'devices');
     });
   }
 
   // 12. 导出与下载
   async function downloadPNG() {
-    showToast(`正在导出 ${state.targetW} × ${state.targetH} 高清壁纸...`, 2000);
+    showToast(`正在导出 ${state.targetW} × ${state.targetH} 高清壁纸...`, 2000, 'hourglass_top');
     const blob = await exportToPNGBlob(state, state.targetW, state.targetH);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -422,21 +430,21 @@ export function setupControls(state, onStateChange, mockupManager) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`✓ 已成功保存 ${state.targetW}×${state.targetH} 壁纸！`);
+    showToast(`已成功保存 ${state.targetW}×${state.targetH} 壁纸！`, 2500, 'check_circle');
   }
 
   function downloadSVG() {
     exportToSVGFile(state, state.targetW, state.targetH);
-    showToast('✓ 已导出矢量 SVG！');
+    showToast('已导出矢量 SVG！', 2000, 'check_circle');
   }
 
   async function copyClipboard() {
     try {
-      showToast('正在渲染并复制到剪贴板...');
+      showToast('正在渲染并复制到剪贴板...', 2000, 'hourglass_top');
       await copyImageToClipboard(state, state.targetW, state.targetH);
-      showToast('📋 已成功复制壁纸图片到剪贴板！');
+      showToast('已成功复制壁纸图片到剪贴板！', 2000, 'content_copy');
     } catch {
-      showToast('复制失败，请点击下载保存图片');
+      showToast('复制失败，请点击下载保存图片', 2500, 'error');
     }
   }
 

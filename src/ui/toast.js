@@ -1,6 +1,6 @@
 let toastTimer = null;
 
-export function showToast(message, duration = 2600) {
+export function showToast(message, duration = 2600, icon = null) {
   let toast = document.getElementById('toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -8,7 +8,11 @@ export function showToast(message, duration = 2600) {
     document.body.appendChild(toast);
   }
 
-  toast.textContent = message;
+  if (icon) {
+    toast.innerHTML = `<span class="material-symbols-rounded toast-icon">${icon}</span><span>${message}</span>`;
+  } else {
+    toast.textContent = message;
+  }
   toast.classList.add('show');
 
   if (toastTimer) clearTimeout(toastTimer);

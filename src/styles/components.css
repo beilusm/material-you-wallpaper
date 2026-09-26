@@ -2,6 +2,37 @@
    Jetpack Compose (Material 3) Component Implementations
    ========================================================================== */
 
+/* Google Material Symbols Rounded 官方图标微调 */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* 选中或激活态时，图标自动切换为 M3 实心填充态 (FILL 1) */
+.active .material-symbols-rounded,
+.m3-btn-filled .material-symbols-rounded,
+.m3-extended-fab.active .material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
 /* 1. M3 Surface Side Sheet / Drawer (NavigationDrawer / SurfaceContainer) */
 #panel {
   position: absolute;
@@ -103,7 +134,9 @@
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
-  font-size: 1rem;
+}
+.m3-icon-btn .material-symbols-rounded {
+  font-size: 20px;
 }
 .m3-icon-btn:hover:not(:disabled) {
   background: var(--md-sys-color-surface-container-highest);
@@ -167,8 +200,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   transition: background-color 0.2s, color 0.2s;
+}
+.m3-segmented-btn .material-symbols-rounded {
+  font-size: 18px;
 }
 .m3-segmented-btn:last-child {
   border-right: none;
@@ -261,6 +297,9 @@
   justify-content: center;
   gap: 6px;
   transition: all 0.2s;
+}
+.m3-assist-chip .material-symbols-rounded {
+  font-size: 18px;
 }
 .m3-assist-chip:hover {
   background: var(--md-sys-color-primary-container);
@@ -497,6 +536,9 @@ input:checked + .m3-switch-track:before {
   border: none;
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
+.m3-btn .material-symbols-rounded {
+  font-size: 19px;
+}
 
 .m3-btn-filled {
   background: var(--md-sys-color-primary);
@@ -557,6 +599,9 @@ input:checked + .m3-switch-track:before {
   box-shadow: var(--md-sys-elevation-level3);
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
+.m3-extended-fab .material-symbols-rounded {
+  font-size: 20px;
+}
 .m3-extended-fab:hover, .m3-extended-fab.active {
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
@@ -586,6 +631,11 @@ input:checked + .m3-switch-track:before {
 }
 #toast.show {
   transform: translateX(-50%) translateY(0);
+}
+#toast .toast-icon {
+  font-size: 19px;
+  line-height: 1;
+  color: var(--md-sys-color-inverse-primary, var(--md-sys-color-primary));
 }
 
 /* 10. 桌面挂件模拟透视 */
@@ -645,11 +695,14 @@ input:checked + .m3-switch-track:before {
   width: 40px;
   height: 40px;
   border-radius: var(--md-shape-corner-medium);
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+}
+.mockup-app-icon .material-symbols-rounded {
+  font-size: 20px;
+  color: #ffffff;
 }
 
 /* ==========================================================================
@@ -661,12 +714,10 @@ input:checked + .m3-switch-track:before {
 }
 
 @media (max-width: 768px), (orientation: portrait) {
-  /* 隐藏桌面端左下角悬浮按钮 */
   .floating-tools {
     display: none !important;
   }
 
-  /* 视口为顶部安全区和底部导航留足呼吸空间 */
   #viewport {
     padding-top: max(12px, env(safe-area-inset-top, 12px));
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
@@ -680,7 +731,6 @@ input:checked + .m3-switch-track:before {
     border-radius: var(--md-shape-corner-large);
   }
 
-  /* 手机端 Compose 规范 BottomAppBar (绝对安全区悬浮) */
   #mobileBottomBar {
     display: flex;
     position: fixed;
@@ -719,7 +769,7 @@ input:checked + .m3-switch-track:before {
     transition: background-color 0.15s, color 0.15s;
   }
   .m3-bar-item .bar-icon {
-    font-size: 1.15rem;
+    font-size: 22px;
     line-height: 1;
   }
   .m3-bar-item:active {
@@ -727,7 +777,6 @@ input:checked + .m3-switch-track:before {
     color: var(--md-sys-color-primary);
   }
 
-  /* 移动端 ModalBottomSheet */
   #panel {
     position: fixed;
     top: auto;
@@ -786,6 +835,8 @@ input:checked + .m3-switch-track:before {
   .mockup-app-icon {
     width: 34px;
     height: 34px;
-    font-size: 1rem;
+  }
+  .mockup-app-icon .material-symbols-rounded {
+    font-size: 18px;
   }
 }

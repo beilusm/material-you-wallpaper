@@ -1,6 +1,6 @@
 /**
- * 桌面模拟组件 (Desktop Mockup Overlay)
- * 提供真实系统桌面挂件（时间、日期、小组件）效果透视，方便判断壁纸是否影响文字可读性
+ * 桌面与手机小组件模拟层 (Desktop / Mobile Mockup Overlay)
+ * 完全遵循 Material 3 设计规范的官方系统组件风格
  */
 export function setupMockupOverlay(wrapper) {
   let overlay = document.getElementById('mockupOverlay');
@@ -13,10 +13,10 @@ export function setupMockupOverlay(wrapper) {
         <div class="mockup-date" id="mockupDate">9月26日 星期六</div>
       </div>
       <div class="mockup-dock">
-        <div class="mockup-app-icon">📁</div>
-        <div class="mockup-app-icon">🌐</div>
-        <div class="mockup-app-icon">💻</div>
-        <div class="mockup-app-icon">⚙️</div>
+        <div class="mockup-app-icon"><span class="material-symbols-rounded">folder</span></div>
+        <div class="mockup-app-icon"><span class="material-symbols-rounded">language</span></div>
+        <div class="mockup-app-icon"><span class="material-symbols-rounded">terminal</span></div>
+        <div class="mockup-app-icon"><span class="material-symbols-rounded">settings</span></div>
       </div>
     `;
     wrapper.appendChild(overlay);

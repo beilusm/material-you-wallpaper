@@ -3,18 +3,18 @@
  * 采用低饱和、高明度差配比，契合 M3 Monet 动态着色美学
  */
 export const PALETTES = [
-  { id: 'sage', name: '原版鼠尾草绿', c1: '#b2ccc1', c2: '#e7f2ed' },
-  { id: 'matcha', name: '京都宇治抹茶', c1: '#c4d7b2', c2: '#f1f5eb' },
-  { id: 'lavender', name: '极简普罗旺斯', c1: '#c5c4e8', c2: '#f3f1f9' },
-  { id: 'glacier', name: '北欧冰川微蓝', c1: '#b0cbd6', c2: '#ebf3f6' },
-  { id: 'apricot', name: '暖杏柔暮沙丘', c1: '#dfc4b8', c2: '#faf4f1' },
-  { id: 'sakura', name: '早樱晨曦初粉', c1: '#e8b8c8', c2: '#fcf3f6' },
-  { id: 'mist', name: '极简灰雾金沙', c1: '#d2ccbe', c2: '#f7f5ef' },
-  { id: 'clay', name: '陶土温暖大地', c1: '#c9a690', c2: '#f6ece5' },
-  { id: 'pine', name: '深幽松针雨林', c1: '#537060', c2: '#e2ece6' },
-  { id: 'ocean', name: '深海流体墨蓝', c1: '#4a6b82', c2: '#e1ecf4' },
-  { id: 'dark', name: '深色墨夜绿境', c1: '#232b27', c2: '#131715' },
-  { id: 'slate', name: '深色极简玄石', c1: '#2c3338', c2: '#191d21' }
+  { id: 'sage', name: '鼠尾草绿', c1: '#b2ccc1', c2: '#e7f2ed' },
+  { id: 'matcha', name: '宇治抹茶', c1: '#c4d7b2', c2: '#f1f5eb' },
+  { id: 'lavender', name: '薰衣草紫', c1: '#c5c4e8', c2: '#f3f1f9' },
+  { id: 'glacier', name: '冰川微蓝', c1: '#b0cbd6', c2: '#ebf3f6' },
+  { id: 'apricot', name: '暮沙暖杏', c1: '#dfc4b8', c2: '#faf4f1' },
+  { id: 'sakura', name: '早樱晨粉', c1: '#e8b8c8', c2: '#fcf3f6' },
+  { id: 'mist', name: '灰雾金沙', c1: '#d2ccbe', c2: '#f7f5ef' },
+  { id: 'clay', name: '陶土大地', c1: '#c9a690', c2: '#f6ece5' },
+  { id: 'pine', name: '松针雨林', c1: '#537060', c2: '#e2ece6' },
+  { id: 'ocean', name: '深海墨蓝', c1: '#4a6b82', c2: '#e1ecf4' },
+  { id: 'dark', name: '墨夜绿境', c1: '#232b27', c2: '#131715' },
+  { id: 'slate', name: '极简玄石', c1: '#2c3338', c2: '#191d21' }
 ];
 
 /**
