@@ -7,23 +7,32 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   font-family: var(--md-sys-typescale-font);
   background-color: var(--md-sys-color-surface-dim);
   color: var(--md-sys-color-on-surface);
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
   display: flex;
-  position: relative;
   transition: background-color 0.3s cubic-bezier(0.2, 0, 0, 1), color 0.3s;
 }
 
 /* 视口展示区 (Compose Box / Surface) */
 #viewport {
   flex: 1;
+  width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -31,6 +40,8 @@ body {
   position: relative;
   background: radial-gradient(circle at center, var(--md-sys-color-surface-container) 0%, var(--md-sys-color-surface-container-lowest) 100%);
   overflow: hidden;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .canvas-wrapper {
@@ -38,7 +49,10 @@ body {
   box-shadow: var(--md-sys-elevation-level4);
   border-radius: var(--md-shape-corner-large);
   overflow: hidden;
-  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1), height 0.3s cubic-bezier(0.2, 0, 0, 1);
+  transition: width 0.25s cubic-bezier(0.2, 0, 0, 1), height 0.25s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 canvas {

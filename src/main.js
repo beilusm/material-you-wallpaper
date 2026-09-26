@@ -3,20 +3,34 @@ import { setupControls } from './ui/controls.js';
 import { renderWallpaper } from './core/renderer.js';
 import { setupMockupOverlay } from './ui/mockup.js';
 
-// 智能屏幕规格自适应检测
-const isMobileDevice = window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
+// 解决移动端浏览器（Chrome/Safari）底栏遮挡的关键：动态计算实际视口高度
+function syncAppHeight() {
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  document.documentElement.style.setProperty('--app-height', `${h}px`);
+}
+syncAppHeight();
+window.addEventListener('resize', syncAppHeight);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', syncAppHeight);
+}
+
+// 屏幕规格自适应检测
+function checkIsPortrait() {
+  return window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
+}
+const isPortraitInitial = checkIsPortrait();
 
 // 应用根状态 (Jetpack Compose Material 3 驱动)
 const state = {
   artMode: 'waves', // 'waves' | 'pebbles' | 'topography'
   isDark: true,     // Material 3 深浅主题切换
-  // 手机端自动匹配竖屏 1080×2400，桌面端自动匹配 2736×1824 (3:2)
-  targetW: isMobileDevice ? 1080 : 2736,
-  targetH: isMobileDevice ? 2400 : 1824,
+  // 手机端优先竖屏黄金比例 1080×2400，桌面端优先 2736×1824 (3:2)
+  targetW: isPortraitInitial ? 1080 : 2736,
+  targetH: isPortraitInitial ? 2400 : 1824,
   color1: '#b2ccc1',
   color2: '#e7f2ed',
   bandCount: 4,
-  angle: isMobileDevice ? -55 : -35, // 竖屏下更陡峭舒展的角度
+  angle: isPortraitInitial ? -55 : -35,
   curvature: 0.42,
   harmonics: 1,
   hasShadow: false,
@@ -38,12 +52,13 @@ const mockupManager = setupMockupOverlay(wrapper);
  * 根据容器比例与目标分辨率自适应计算居中预览画布
  */
 function updateCanvasLayout() {
-  const isPortrait = window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
-  const padX = isPortrait ? 16 : 48;
-  const padY = isPortrait ? 96 : 48; // 移动端为底部 BottomAppBar 预留呼吸空间
+  const isPortrait = checkIsPortrait();
+  // 移动端为底部导航栏与边距预留足量呼吸空间
+  const padX = isPortrait ? 24 : 48;
+  const padY = isPortrait ? 116 : 48;
 
-  const maxW = viewport.clientWidth - padX;
-  const maxH = viewport.clientHeight - padY;
+  const maxW = Math.max(100, viewport.clientWidth - padX);
+  const maxH = Math.max(100, viewport.clientHeight - padY);
   const aspect = state.targetW / state.targetH;
 
   let renderW, renderH;
@@ -89,13 +104,15 @@ updateCanvasLayout();
 draw();
 
 window.addEventListener('resize', () => {
+  syncAppHeight();
   updateCanvasLayout();
   draw();
 });
 
 window.addEventListener('orientationchange', () => {
   setTimeout(() => {
+    syncAppHeight();
     updateCanvasLayout();
     draw();
-  }, 150);
+  }, 200);
 });

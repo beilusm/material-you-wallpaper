@@ -198,32 +198,71 @@ export function setupControls(state, onStateChange, mockupManager) {
 
   // 6. 分辨率预设渲染 (Compose Tonal Cards)
   const resGrid = document.getElementById('resGrid');
-  resGrid.innerHTML = '';
+  function refreshResGrid() {
+    resGrid.innerHTML = '';
+    RESOLUTION_PRESETS.forEach((res) => {
+      const btn = document.createElement('button');
+      const isThisActive = (state.targetW === res.w && state.targetH === res.h);
+      btn.className = `m3-res-card ${isThisActive ? 'active' : ''}`;
+      btn.dataset.w = res.w;
+      btn.dataset.h = res.h;
+      btn.innerHTML = `
+        <div class="name">${res.name} <span class="badge">${res.badge}</span></div>
+        <div class="dim">${res.w} × ${res.h}</div>
+      `;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.m3-res-card').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.targetW = res.w;
+        state.targetH = res.h;
+        updateMobileRatioLabel();
+        commitStateChange(true);
+      });
+      resGrid.appendChild(btn);
+    });
+  }
+  refreshResGrid();
 
-  RESOLUTION_PRESETS.forEach((res) => {
-    const btn = document.createElement('button');
-    const isThisActive = (state.targetW === res.w && state.targetH === res.h);
-    btn.className = `m3-res-card ${isThisActive ? 'active' : ''}`;
-    btn.dataset.w = res.w;
-    btn.dataset.h = res.h;
-    btn.innerHTML = `
-      <div class="name">${res.name} <span class="badge">${res.badge}</span></div>
-      <div class="dim">${res.w} × ${res.h}</div>
-    `;
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.m3-res-card').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.targetW = res.w;
-      state.targetH = res.h;
+  // 移动端快速比例切换 (手机竖屏 9:20 与 电脑横屏 3:2 互切)
+  const mobileRatioBtn = document.getElementById('mobileRatioBtn');
+  const mobileRatioLabel = document.getElementById('mobileRatioLabel');
+
+  function updateMobileRatioLabel() {
+    if (!mobileRatioLabel) return;
+    const isPortrait = state.targetH > state.targetW;
+    mobileRatioLabel.textContent = isPortrait ? '竖屏' : '横屏';
+  }
+  updateMobileRatioLabel();
+
+  if (mobileRatioBtn) {
+    mobileRatioBtn.addEventListener('click', () => {
+      const isCurrentlyPortrait = state.targetH > state.targetW;
+      if (isCurrentlyPortrait) {
+        // 切为横屏 2736×1824
+        state.targetW = 2736;
+        state.targetH = 1824;
+        state.angle = -35;
+        showToast('📐 已切换为电脑横屏 (3:2)', 1200);
+      } else {
+        // 切为竖屏 1080×2400
+        state.targetW = 1080;
+        state.targetH = 2400;
+        state.angle = -55;
+        showToast('📱 已切换为手机竖屏 (9:20)', 1200);
+      }
+      angleSlider.value = state.angle;
+      document.getElementById('angleVal').textContent = `${state.angle}°`;
+      updateMobileRatioLabel();
+      refreshResGrid();
       commitStateChange(true);
     });
-    resGrid.appendChild(btn);
-  });
+  }
 
   // 7. 随机造型生成
   function randomize() {
     state.seed = Math.floor(Math.random() * 1000000);
-    const baseAngle = (window.innerWidth <= 768 || window.innerHeight > window.innerWidth) ? -55 : -35;
+    const isPortrait = state.targetH > state.targetW;
+    const baseAngle = isPortrait ? -55 : -35;
     state.angle = baseAngle + Math.floor(Math.random() * 16 - 8);
     angleSlider.value = state.angle;
     document.getElementById('angleVal').textContent = `${state.angle}°`;
@@ -264,6 +303,8 @@ export function setupControls(state, onStateChange, mockupManager) {
     document.getElementById('shadowToggle').checked = state.hasShadow;
     document.getElementById('gradientToggle').checked = state.useGradient;
 
+    updateMobileRatioLabel();
+    refreshResGrid();
     syncTheme();
     onStateChange(true);
     updateUndoRedoUI();
@@ -308,9 +349,7 @@ export function setupControls(state, onStateChange, mockupManager) {
 
   function openSheet() {
     panel.classList.remove('collapsed');
-    if (window.innerWidth <= 768) {
-      scrim.classList.add('active');
-    }
+    scrim.classList.add('active');
   }
 
   function closeSheet() {
@@ -345,18 +384,11 @@ export function setupControls(state, onStateChange, mockupManager) {
   // 10. 手机专属 BottomAppBar 按钮绑定
   const mobileRandomBtn = document.getElementById('mobileRandomBtn');
   const mobilePaletteBtn = document.getElementById('mobilePaletteBtn');
-  const mobileMockupBtn = document.getElementById('mobileMockupBtn');
   const mobileDownloadBtn = document.getElementById('mobileDownloadBtn');
   const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
 
   if (mobileRandomBtn) mobileRandomBtn.addEventListener('click', randomize);
   if (mobilePaletteBtn) mobilePaletteBtn.addEventListener('click', triggerRandomPalette);
-  if (mobileMockupBtn) {
-    mobileMockupBtn.addEventListener('click', () => {
-      const active = mockupManager.toggle();
-      showToast(active ? '📱 手机挂件已开启' : '关闭手机挂件', 1000);
-    });
-  }
   if (mobileDownloadBtn) mobileDownloadBtn.addEventListener('click', downloadPNG);
   if (mobileSettingsBtn) {
     mobileSettingsBtn.addEventListener('click', () => {
