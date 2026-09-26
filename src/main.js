@@ -3,9 +3,10 @@ import { setupControls } from './ui/controls.js';
 import { renderWallpaper } from './core/renderer.js';
 import { setupMockupOverlay } from './ui/mockup.js';
 
-// 应用根状态
+// 应用根状态 (Jetpack Compose Material 3 驱动)
 const state = {
   artMode: 'waves', // 'waves' | 'pebbles' | 'topography'
+  isDark: true,     // Material 3 深浅主题切换
   targetW: 2736,
   targetH: 1824,
   color1: '#b2ccc1',

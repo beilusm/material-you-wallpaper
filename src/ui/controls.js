@@ -5,6 +5,7 @@ import { exportToPNGBlob, copyImageToClipboard } from '../core/renderer.js';
 import { exportToSVGFile } from '../core/svg-exporter.js';
 import { extractPaletteFromImage } from '../core/extractor.js';
 import { HistoryManager } from '../core/history.js';
+import { applyMaterialTheme } from '../core/monet.js';
 import { showToast } from './toast.js';
 
 export function setupControls(state, onStateChange, mockupManager) {
@@ -14,8 +15,14 @@ export function setupControls(state, onStateChange, mockupManager) {
   // 初始化波浪随机参数
   state.waveParams = generateWaveParameters(state.seed);
 
-  // 1. 艺术形态模式切换 (Tabs)
-  const modeTabs = document.querySelectorAll('.mode-tab');
+  // 1. 初始化并联动 Jetpack Compose 动态主题 (DynamicColorScheme)
+  function syncTheme() {
+    applyMaterialTheme(state.color1, state.isDark);
+  }
+  syncTheme();
+
+  // 2. 艺术形态模式切换 (Compose SegmentedButton)
+  const modeTabs = document.querySelectorAll('.m3-segmented-btn');
   modeTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       modeTabs.forEach(t => t.classList.remove('active'));
@@ -26,13 +33,13 @@ export function setupControls(state, onStateChange, mockupManager) {
     });
   });
 
-  // 2. 调色板预设渲染
+  // 3. 调色板预设渲染 (Compose FilterChips)
   const paletteGrid = document.getElementById('paletteGrid');
   paletteGrid.innerHTML = '';
 
   PALETTES.forEach((p, idx) => {
     const btn = document.createElement('button');
-    btn.className = `palette-btn ${idx === 0 ? 'active' : ''}`;
+    btn.className = `m3-filter-chip ${idx === 0 ? 'active' : ''}`;
     btn.dataset.id = p.id;
     btn.innerHTML = `
       <div class="color-swatches">
@@ -42,31 +49,33 @@ export function setupControls(state, onStateChange, mockupManager) {
       <span>${p.name}</span>
     `;
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.color1 = p.c1;
       state.color2 = p.c2;
       document.getElementById('color1Input').value = p.c1;
       document.getElementById('color2Input').value = p.c2;
+      syncTheme();
       commitStateChange();
     });
     paletteGrid.appendChild(btn);
   });
 
-  // 3. 自定义拾色器
+  // 4. 自定义拾色器
   const c1Input = document.getElementById('color1Input');
   const c2Input = document.getElementById('color2Input');
 
   c1Input.addEventListener('input', (e) => {
     state.color1 = e.target.value;
-    document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
+    syncTheme();
     commitStateChange(false, false);
   });
   c1Input.addEventListener('change', () => commitStateChange());
 
   c2Input.addEventListener('input', (e) => {
     state.color2 = e.target.value;
-    document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
     commitStateChange(false, false);
   });
   c2Input.addEventListener('change', () => commitStateChange());
@@ -77,6 +86,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     state.color2 = temp;
     c1Input.value = state.color1;
     c2Input.value = state.color2;
+    syncTheme();
     commitStateChange();
   });
 
@@ -87,9 +97,10 @@ export function setupControls(state, onStateChange, mockupManager) {
     state.color2 = pair.c2;
     c1Input.value = pair.c1;
     c2Input.value = pair.c2;
-    document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
+    syncTheme();
     commitStateChange();
-    showToast('🎨 已生成一组自然灵感配色！', 1500);
+    showToast('🎨 已生成一组动态 Monet 配色！', 1500);
   });
 
   // 智能图片取色
@@ -101,22 +112,32 @@ export function setupControls(state, onStateChange, mockupManager) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      showToast('正在分析图片提取色系...');
+      showToast('正在分析图片提取 Monet 色阶...');
       const pair = await extractPaletteFromImage(file);
       state.color1 = pair.c1;
       state.color2 = pair.c2;
       c1Input.value = pair.c1;
       c2Input.value = pair.c2;
-      document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
+      syncTheme();
       commitStateChange();
-      showToast('✓ 成功提取图片配色！');
+      showToast('✓ 成功提取图片配色并同步全局主题！');
     } catch {
       showToast('图片分析失败，请换一张试一下');
     }
     imgFileInput.value = '';
   });
 
-  // 4. 滑块控制
+  // 深浅主题切换
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  themeToggleBtn.addEventListener('click', () => {
+    state.isDark = !state.isDark;
+    themeToggleBtn.textContent = state.isDark ? '☀️' : '🌙';
+    syncTheme();
+    showToast(state.isDark ? '已切换至深色 Material 模式' : '已切换至浅色 Material 模式', 1200);
+  });
+
+  // 5. 滑块控制 (Compose Sliders)
   const bandSlider = document.getElementById('bandCountSlider');
   const angleSlider = document.getElementById('angleSlider');
   const curvSlider = document.getElementById('curvSlider');
@@ -169,13 +190,13 @@ export function setupControls(state, onStateChange, mockupManager) {
     commitStateChange();
   });
 
-  // 5. 分辨率预设渲染
+  // 6. 分辨率预设渲染 (Compose Tonal Cards)
   const resGrid = document.getElementById('resGrid');
   resGrid.innerHTML = '';
 
   RESOLUTION_PRESETS.forEach((res) => {
     const btn = document.createElement('button');
-    btn.className = `res-btn ${res.isDefault ? 'active' : ''}`;
+    btn.className = `m3-res-card ${res.isDefault ? 'active' : ''}`;
     btn.dataset.w = res.w;
     btn.dataset.h = res.h;
     btn.innerHTML = `
@@ -183,7 +204,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       <div class="dim">${res.w} × ${res.h}</div>
     `;
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.m3-res-card').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.targetW = res.w;
       state.targetH = res.h;
@@ -192,7 +213,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     resGrid.appendChild(btn);
   });
 
-  // 6. 随机造型生成
+  // 7. 随机造型生成
   function randomize() {
     state.seed = Math.floor(Math.random() * 1000000);
     state.angle = -35 + Math.floor(Math.random() * 16 - 8);
@@ -206,7 +227,7 @@ export function setupControls(state, onStateChange, mockupManager) {
   document.getElementById('randomBtn').addEventListener('click', randomize);
   document.getElementById('quickRandomBtn').addEventListener('click', randomize);
 
-  // 7. 撤销 / 重做
+  // 8. 撤销 / 重做
   const undoBtn = document.getElementById('undoBtn');
   const redoBtn = document.getElementById('redoBtn');
 
@@ -219,7 +240,6 @@ export function setupControls(state, onStateChange, mockupManager) {
     Object.assign(state, snap);
     state.waveParams = generateWaveParameters(state.seed);
 
-    // 同步 UI 控件状态
     modeTabs.forEach(t => t.classList.toggle('active', t.dataset.mode === state.artMode));
     c1Input.value = state.color1;
     c2Input.value = state.color2;
@@ -236,6 +256,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     document.getElementById('shadowToggle').checked = state.hasShadow;
     document.getElementById('gradientToggle').checked = state.useGradient;
 
+    syncTheme();
     onStateChange(true);
     updateUndoRedoUI();
   }
@@ -268,7 +289,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     onStateChange(needsLayoutResize);
   }
 
-  // 8. 面板折叠
+  // 9. 面板折叠
   const panel = document.getElementById('panel');
   document.getElementById('togglePanelBtn').addEventListener('click', () => {
     panel.classList.toggle('collapsed');
@@ -277,7 +298,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     panel.classList.add('collapsed');
   });
 
-  // 9. 桌面挂件模拟透视 (Mockup)
+  // 10. 桌面挂件透视 (Mockup)
   const mockupBtn = document.getElementById('toggleMockupBtn');
   if (mockupBtn) {
     mockupBtn.addEventListener('click', () => {
@@ -287,7 +308,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     });
   }
 
-  // 10. 导出与下载
+  // 11. 导出与下载
   async function downloadPNG() {
     showToast(`正在导出 ${state.targetW} × ${state.targetH} 高清壁纸...`, 2000);
     const blob = await exportToPNGBlob(state, state.targetW, state.targetH);
@@ -321,7 +342,7 @@ export function setupControls(state, onStateChange, mockupManager) {
   document.getElementById('downloadSvgBtn').addEventListener('click', downloadSVG);
   document.getElementById('copyClipboardBtn').addEventListener('click', copyClipboard);
 
-  // 11. 全局快捷键
+  // 12. 全局快捷键
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Space') {

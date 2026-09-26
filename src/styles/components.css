@@ -1,216 +1,235 @@
-/* 悬浮面板 */
+/* ==========================================================================
+   Jetpack Compose (Material 3) Component Implementations
+   ========================================================================== */
+
+/* 1. M3 Surface Side Sheet / Drawer (NavigationDrawer / SurfaceContainer) */
 #panel {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  bottom: 20px;
-  width: 400px;
-  background: var(--surface);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  border: 1px solid var(--outline);
-  border-radius: var(--radius-xl);
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 410px;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-corner-extra-large);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--md-sys-elevation-level3);
   z-index: 100;
   transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s;
 }
 
 #panel.collapsed {
-  transform: translateX(calc(100% + 30px));
+  transform: translateX(calc(100% + 24px));
   opacity: 0;
   pointer-events: none;
 }
 
+/* 顶部拖拽条 (Compose BottomSheet Handle / Tonal Header) */
+.m3-drag-handle {
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 10px auto 0;
+}
+
 .panel-header {
-  padding: 18px 24px 14px;
+  padding: 14px 20px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--outline);
 }
 
 .panel-title {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   font-weight: 700;
+  color: var(--md-sys-color-on-surface);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   letter-spacing: -0.01em;
 }
 
-.panel-title span {
-  background: linear-gradient(135deg, #a6d3bd, #d1ede0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.panel-title .m3-pill-badge {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-radius: var(--md-shape-corner-full);
+  font-weight: 600;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
-.icon-btn {
+/* Compose M3 IconButton */
+.m3-icon-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
+  color: var(--md-sys-color-on-surface);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--md-shape-corner-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  font-size: 1rem;
 }
-.icon-btn:hover:not(:disabled) {
-  color: var(--primary);
-  background: rgba(255, 255, 255, 0.08);
+.m3-icon-btn:hover:not(:disabled) {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-primary);
 }
-.icon-btn:disabled {
-  opacity: 0.3;
+.m3-icon-btn:disabled {
+  opacity: 0.38;
   cursor: not-allowed;
 }
 
 .panel-content {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 24px;
+  padding: 8px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
 .panel-content::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 .panel-content::-webkit-scrollbar-thumb {
-  background: var(--outline);
+  background: var(--md-sys-color-outline-variant);
   border-radius: 4px;
 }
 
 .section-title {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-secondary);
+  color: var(--md-sys-color-primary);
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* 艺术形态模式切换 (Tabs) */
-.mode-tabs {
+/* 2. Compose M3 SegmentedButton (单选分段器) */
+.m3-segmented-row {
   display: flex;
-  background: var(--surface-container);
-  padding: 4px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--outline);
-  gap: 4px;
+  width: 100%;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-shape-corner-full);
+  overflow: hidden;
+  background: transparent;
 }
 
-.mode-tab {
+.m3-segmented-btn {
   flex: 1;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  padding: 8px 4px;
-  font-size: 0.8rem;
+  border-right: 1px solid var(--md-sys-color-outline);
+  padding: 8px 6px;
+  font-family: inherit;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
+  transition: background-color 0.2s, color 0.2s;
 }
-.mode-tab:hover {
-  color: var(--text-primary);
+.m3-segmented-btn:last-child {
+  border-right: none;
 }
-.mode-tab.active {
-  background: var(--primary-container);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
+.m3-segmented-btn:hover {
+  background: var(--md-state-hover);
+}
+.m3-segmented-btn.active {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
 }
 
-/* 调色板网格 */
+/* 3. Compose M3 FilterChip (调色板预设) */
 .palette-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   max-height: 180px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 2px;
 }
 .palette-grid::-webkit-scrollbar {
   width: 4px;
 }
 .palette-grid::-webkit-scrollbar-thumb {
-  background: var(--outline);
+  background: var(--md-sys-color-outline-variant);
   border-radius: 4px;
 }
 
-.palette-btn {
-  background: var(--surface-container);
-  border: 1px solid var(--outline);
-  border-radius: var(--radius-sm);
-  padding: 7px 9px;
+.m3-filter-chip {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-corner-small);
+  padding: 6px 10px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  color: var(--text-primary);
-  font-size: 0.78rem;
-  font-weight: 500;
-  transition: all 0.2s;
+  color: var(--md-sys-color-on-surface);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  text-align: left;
 }
-
-.palette-btn:hover {
-  background: rgba(166, 211, 189, 0.15);
-  border-color: var(--primary);
+.m3-filter-chip:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  border-color: var(--md-sys-color-outline);
 }
-
-.palette-btn.active {
-  background: var(--primary-container);
-  border-color: var(--primary);
-  color: #fff;
+.m3-filter-chip.active {
+  background: var(--md-sys-color-secondary-container);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-secondary-container);
 }
 
 .color-swatches {
   display: flex;
-  width: 28px;
-  height: 20px;
-  border-radius: 5px;
+  width: 26px;
+  height: 18px;
+  border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.25);
 }
-
 .swatch {
   flex: 1;
   height: 100%;
 }
 
-/* 自定义拾色与辅助动作 */
+/* Compose M3 AssistChip (辅助操作小片) */
 .color-action-row {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
-.action-chip {
+.m3-assist-chip {
   flex: 1;
-  background: var(--surface-container);
-  border: 1px solid var(--outline);
-  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-corner-small);
   padding: 6px 10px;
-  color: var(--text-secondary);
-  font-size: 0.76rem;
+  color: var(--md-sys-color-on-surface);
+  font-family: inherit;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -219,37 +238,40 @@
   gap: 6px;
   transition: all 0.2s;
 }
-.action-chip:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: rgba(166, 211, 189, 0.1);
+.m3-assist-chip:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: var(--md-sys-color-primary);
 }
 
+/* 自定义拾色条 */
 .custom-colors {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 8px;
-  background: var(--surface-container);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--outline);
+  background: var(--md-sys-color-surface-container-low);
+  padding: 6px 10px;
+  border-radius: var(--md-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .color-picker-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
   flex: 1;
+  color: var(--md-sys-color-on-surface);
 }
 
 .color-picker-item input[type="color"] {
   -webkit-appearance: none;
   border: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
   cursor: pointer;
   background: transparent;
 }
@@ -258,186 +280,193 @@
 }
 .color-picker-item input[type="color"]::-webkit-color-swatch {
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
-/* 滑块组 */
-.control-group {
+/* 4. Compose M3 Slider (androidx.compose.material3.Slider) */
+.m3-slider-group {
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 12px;
 }
 
-.slider-item {
+.m3-slider-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
-.slider-label {
+.m3-slider-label {
   display: flex;
   justify-content: space-between;
-  font-size: 0.82rem;
-  color: var(--text-primary);
-}
-
-.slider-value {
-  font-size: 0.78rem;
-  color: var(--primary);
+  font-size: 0.8rem;
   font-weight: 600;
+  color: var(--md-sys-color-on-surface);
 }
 
+.m3-slider-value {
+  font-size: 0.76rem;
+  color: var(--md-sys-color-primary);
+  font-weight: 700;
+}
+
+/* Compose M3 胶囊滑轨 */
 input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  height: 12px;
+  background: var(--md-sys-color-surface-container-highest);
+  border-radius: var(--md-shape-corner-full);
   outline: none;
+  margin: 6px 0;
+  cursor: pointer;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: transform 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
+  transform: scale(1.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* 开关控件 */
-.switch-row {
+/* 5. Compose M3 Switch (androidx.compose.material3.Switch) */
+.m3-switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 0;
-  font-size: 0.84rem;
+  padding: 4px 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
 }
 
-.toggle-switch {
+.m3-switch {
   position: relative;
-  width: 38px;
-  height: 22px;
+  width: 48px;
+  height: 28px;
 }
-.toggle-switch input {
+.m3-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-.slider-round {
+.m3-switch-track {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(255, 255, 255, 0.15);
-  transition: .3s;
-  border-radius: 24px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border: 2px solid var(--md-sys-color-outline);
+  transition: 0.25s cubic-bezier(0.2, 0, 0, 1);
+  border-radius: var(--md-shape-corner-full);
 }
-.slider-round:before {
+.m3-switch-track:before {
   position: absolute;
   content: "";
   height: 16px;
   width: 16px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .3s;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--md-sys-color-outline);
+  transition: 0.25s cubic-bezier(0.2, 0, 0, 1);
   border-radius: 50%;
 }
-input:checked + .slider-round {
-  background-color: var(--primary);
+input:checked + .m3-switch-track {
+  background-color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
 }
-input:checked + .slider-round:before {
-  transform: translateX(16px);
-  background-color: var(--on-primary);
+input:checked + .m3-switch-track:before {
+  transform: translateX(20px);
+  background-color: var(--md-sys-color-on-primary);
+  width: 20px;
+  height: 20px;
+  left: 2px;
+  bottom: 2px;
 }
 
-/* 分辨率预设卡片 */
+/* 6. Compose M3 Resolution FilterChip Grid */
 .res-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
-.res-btn {
-  background: var(--surface-container);
-  border: 1px solid var(--outline);
-  border-radius: var(--radius-sm);
+.m3-res-card {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-corner-medium);
   padding: 8px 10px;
   text-align: left;
   cursor: pointer;
-  color: var(--text-primary);
-  transition: all 0.2s;
-  position: relative;
+  color: var(--md-sys-color-on-surface);
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.m3-res-card:hover {
+  border-color: var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-container-highest);
+}
+.m3-res-card.active {
+  background: var(--md-sys-color-secondary-container);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-secondary-container);
 }
 
-.res-btn:hover {
-  border-color: var(--primary);
-  background: rgba(166, 211, 189, 0.1);
-}
-
-.res-btn.active {
-  background: var(--primary-container);
-  border-color: var(--primary);
-}
-
-.res-btn .name {
-  font-size: 0.8rem;
-  font-weight: 600;
+.m3-res-card .name {
+  font-size: 0.78rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 4px;
 }
-
-.res-btn .badge {
-  font-size: 0.62rem;
-  background: var(--primary);
-  color: var(--on-primary);
-  padding: 1px 5px;
+.m3-res-card .badge {
+  font-size: 0.6rem;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 1px 4px;
   border-radius: 4px;
   font-weight: 700;
 }
-
-.res-btn .dim {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
+.m3-res-card .dim {
+  font-size: 0.68rem;
+  opacity: 0.75;
   margin-top: 2px;
 }
 
-.res-btn.active .dim {
-  color: #b0dac8;
-}
-
-/* 底部操作按钮 */
+/* 7. Compose M3 Buttons (FilledButton, TonalButton, OutlinedButton) */
 .panel-footer {
-  padding: 14px 24px 18px;
+  padding: 12px 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-top: 1px solid var(--outline);
-  background: rgba(22, 26, 24, 0.6);
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 0 0 var(--md-shape-corner-extra-large) var(--md-shape-corner-extra-large);
 }
 
-.btn-row {
+.m3-btn-row {
   display: flex;
   gap: 8px;
 }
 
-.btn {
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+.m3-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--md-shape-corner-full);
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -445,72 +474,99 @@ input:checked + .slider-round:before {
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.btn-primary {
-  background: var(--primary);
-  color: var(--on-primary);
+/* Filled Button */
+.m3-btn-filled {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   flex: 1.2;
-  box-shadow: 0 4px 12px rgba(166, 211, 189, 0.25);
+  box-shadow: var(--md-sys-elevation-level1);
 }
-.btn-primary:hover {
-  background: #bbf0d7;
-  transform: translateY(-1px);
+.m3-btn-filled:hover {
+  filter: brightness(1.08);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 
-.btn-secondary {
-  background: var(--surface-container);
-  color: var(--text-primary);
-  border: 1px solid var(--outline);
+/* Filled Tonal Button */
+.m3-btn-tonal {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
   flex: 1;
 }
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+.m3-btn-tonal:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
 }
 
-.btn-random {
-  background: linear-gradient(135deg, #2b3e34, #1d2b24);
-  color: var(--primary);
-  border: 1px solid rgba(166, 211, 189, 0.3);
+/* Outlined Button */
+.m3-btn-outlined {
+  background: transparent;
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline);
   width: 100%;
 }
-.btn-random:hover {
-  background: linear-gradient(135deg, #364e41, #24352c);
-  border-color: var(--primary);
+.m3-btn-outlined:hover {
+  background: var(--md-state-hover);
+  border-color: var(--md-sys-color-primary);
 }
 
-/* 悬浮快速按钮 */
+/* 8. Compose Extended FloatingActionButton (ExtendedFAB) */
 .floating-tools {
   position: absolute;
-  bottom: 24px;
-  left: 24px;
+  bottom: 20px;
+  left: 20px;
   display: flex;
   gap: 10px;
   z-index: 90;
 }
 
-.fab {
-  background: var(--surface);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--outline);
-  color: var(--text-primary);
-  padding: 9px 16px;
-  border-radius: var(--radius-pill);
+.m3-extended-fab {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--md-shape-corner-large);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: var(--shadow-md);
-  transition: all 0.2s;
+  gap: 8px;
+  box-shadow: var(--md-sys-elevation-level3);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
-.fab:hover, .fab.active {
-  background: var(--primary);
-  color: var(--on-primary);
-  border-color: var(--primary);
+.m3-extended-fab:hover, .m3-extended-fab.active {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   transform: translateY(-2px);
+  box-shadow: var(--md-sys-elevation-level4);
 }
 
-/* 桌面挂件透视覆盖层 (Mockup) */
+/* 9. Compose M3 Snackbar / Toast */
+#toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: var(--md-sys-color-inverse-surface);
+  color: var(--md-sys-color-inverse-on-surface);
+  padding: 12px 24px;
+  border-radius: var(--md-shape-corner-extra-small);
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: var(--md-sys-elevation-level3);
+  z-index: 1000;
+  transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 10. 桌面小组件模拟层 */
 #mockupOverlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -518,13 +574,12 @@ input:checked + .slider-round:before {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 40px;
+  padding: 36px;
   opacity: 0;
   transform: scale(0.98);
   transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), transform 0.3s cubic-bezier(0.2, 0, 0, 1);
   z-index: 10;
 }
-
 #mockupOverlay.active {
   opacity: 1;
   transform: scale(1);
@@ -532,54 +587,47 @@ input:checked + .slider-round:before {
 
 .mockup-clock-widget {
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   padding: 16px 24px;
-  border-radius: 20px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  border-radius: var(--md-shape-corner-extra-large);
+  box-shadow: var(--md-sys-elevation-level2);
 }
-
 .mockup-time {
-  font-size: 3rem;
+  font-size: 3.2rem;
   font-weight: 700;
   line-height: 1;
   color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
-
 .mockup-date {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: rgba(255, 255, 255, 0.85);
   margin-top: 6px;
   font-weight: 500;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-
 .mockup-dock {
   align-self: center;
   display: flex;
-  gap: 14px;
+  gap: 12px;
   background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 18px;
-  border-radius: 26px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+  padding: 8px 16px;
+  border-radius: var(--md-shape-corner-full);
 }
-
 .mockup-app-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.45);
+  width: 42px;
+  height: 42px;
+  border-radius: var(--md-shape-corner-medium);
+  background: rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  font-size: 1.25rem;
 }
 
 @media (max-width: 900px) {
@@ -590,7 +638,7 @@ input:checked + .slider-round:before {
     right: 0;
     width: 100%;
     height: 65vh;
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-radius: var(--md-shape-corner-extra-large) var(--md-shape-corner-extra-large) 0 0;
   }
   #panel.collapsed {
     transform: translateY(100%);

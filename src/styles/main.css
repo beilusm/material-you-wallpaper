@@ -10,17 +10,18 @@
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-app);
-  color: var(--text-primary);
+  font-family: var(--md-sys-typescale-font);
+  background-color: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   display: flex;
   position: relative;
+  transition: background-color 0.3s cubic-bezier(0.2, 0, 0, 1), color 0.3s;
 }
 
-/* 视口展示区 */
+/* 视口展示区 (Compose Box / Surface) */
 #viewport {
   flex: 1;
   height: 100%;
@@ -28,14 +29,14 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
-  background: radial-gradient(circle at center, #1b211e 0%, #0c0f0e 100%);
+  background: radial-gradient(circle at center, var(--md-sys-color-surface-container) 0%, var(--md-sys-color-surface-container-lowest) 100%);
   overflow: hidden;
 }
 
 .canvas-wrapper {
   position: relative;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4);
-  border-radius: 12px;
+  box-shadow: var(--md-sys-elevation-level4);
+  border-radius: var(--md-shape-corner-large);
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.2, 0, 0, 1), height 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
