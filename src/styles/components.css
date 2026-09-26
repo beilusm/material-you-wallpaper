@@ -25,17 +25,39 @@
   pointer-events: none;
 }
 
-/* 顶部拖拽条 (Compose BottomSheet Handle / Tonal Header) */
+/* 遮罩背景层 (Mobile Scrim) */
+#sheetScrim {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1);
+  z-index: 95;
+}
+#sheetScrim.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 顶部拖拽把手 (Compose BottomSheet DragHandle) */
 .m3-drag-handle {
-  width: 32px;
-  height: 4px;
-  border-radius: 2px;
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
   background: var(--md-sys-color-outline-variant);
-  margin: 10px auto 0;
+  margin: 10px auto 4px;
+  cursor: grab;
+  transition: background-color 0.2s;
+}
+.m3-drag-handle:active {
+  background: var(--md-sys-color-primary);
 }
 
 .panel-header {
-  padding: 14px 20px 12px;
+  padding: 10px 20px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -214,7 +236,7 @@
   height: 100%;
 }
 
-/* Compose M3 AssistChip (辅助操作小片) */
+/* Compose M3 AssistChip */
 .color-action-row {
   display: flex;
   gap: 8px;
@@ -283,7 +305,7 @@
   border-radius: 4px;
 }
 
-/* 4. Compose M3 Slider (androidx.compose.material3.Slider) */
+/* 4. Compose M3 Slider */
 .m3-slider-group {
   display: flex;
   flex-direction: column;
@@ -310,7 +332,6 @@
   font-weight: 700;
 }
 
-/* Compose M3 胶囊滑轨 */
 input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
@@ -338,7 +359,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* 5. Compose M3 Switch (androidx.compose.material3.Switch) */
+/* 5. Compose M3 Switch */
 .m3-switch-row {
   display: flex;
   align-items: center;
@@ -442,7 +463,7 @@ input:checked + .m3-switch-track:before {
   margin-top: 2px;
 }
 
-/* 7. Compose M3 Buttons (FilledButton, TonalButton, OutlinedButton) */
+/* 7. Compose M3 Buttons */
 .panel-footer {
   padding: 12px 20px 16px;
   display: flex;
@@ -474,7 +495,6 @@ input:checked + .m3-switch-track:before {
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Filled Button */
 .m3-btn-filled {
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
@@ -486,7 +506,6 @@ input:checked + .m3-switch-track:before {
   box-shadow: var(--md-sys-elevation-level2);
 }
 
-/* Filled Tonal Button */
 .m3-btn-tonal {
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
@@ -497,7 +516,6 @@ input:checked + .m3-switch-track:before {
   color: var(--md-sys-color-on-primary-container);
 }
 
-/* Outlined Button */
 .m3-btn-outlined {
   background: transparent;
   color: var(--md-sys-color-primary);
@@ -509,7 +527,7 @@ input:checked + .m3-switch-track:before {
   border-color: var(--md-sys-color-primary);
 }
 
-/* 8. Compose Extended FloatingActionButton (ExtendedFAB) */
+/* 8. Desktop Floating Tools */
 .floating-tools {
   position: absolute;
   bottom: 20px;
@@ -566,7 +584,7 @@ input:checked + .m3-switch-track:before {
   transform: translateX(-50%) translateY(0);
 }
 
-/* 10. 桌面小组件模拟层 */
+/* 10. 桌面挂件模拟透视 */
 #mockupOverlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -630,17 +648,136 @@ input:checked + .m3-switch-track:before {
   font-size: 1.25rem;
 }
 
-@media (max-width: 900px) {
+/* ==========================================================================
+   11. 手机端与竖屏移动端专属深度体验优化 (Compose Mobile BottomBar & BottomSheet)
+   ========================================================================== */
+
+/* 手机底部导航栏 (Compose BottomAppBar) */
+#mobileBottomBar {
+  display: none;
+}
+
+@media (max-width: 768px), (orientation: portrait) {
+  /* 视口全屏展开，将壁纸最大化呈现给用户 */
+  #viewport {
+    padding: 12px 12px 90px;
+  }
+
+  .canvas-wrapper {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: var(--md-shape-corner-large);
+  }
+
+  /* 隐藏桌面端左下角的宽按钮，替换为移动端专属 BottomAppBar */
+  .floating-tools {
+    display: none !important;
+  }
+
+  /* 手机端 Compose 规范 BottomAppBar */
+  #mobileBottomBar {
+    display: flex;
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    height: 64px;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-shape-corner-full);
+    box-shadow: var(--md-sys-elevation-level4);
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    z-index: 90;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .m3-bar-item {
+    background: transparent;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    height: 100%;
+    border-radius: var(--md-shape-corner-full);
+    transition: background-color 0.2s, color 0.2s;
+  }
+  .m3-bar-item .bar-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+  .m3-bar-item:active {
+    background: var(--md-state-pressed);
+    color: var(--md-sys-color-primary);
+  }
+
+  /* 移动端 ModalBottomSheet */
   #panel {
     top: auto;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
-    height: 65vh;
+    max-height: 82vh;
     border-radius: var(--md-shape-corner-extra-large) var(--md-shape-corner-extra-large) 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: var(--md-sys-elevation-level4);
+    z-index: 100;
   }
+
   #panel.collapsed {
     transform: translateY(100%);
+    opacity: 0;
+  }
+
+  .panel-header {
+    padding: 8px 16px 10px;
+  }
+
+  .panel-content {
+    padding: 4px 16px 24px;
+    gap: 16px;
+  }
+
+  .panel-footer {
+    padding: 10px 16px 18px;
+  }
+
+  /* 调色板在手机上更紧凑实用 */
+  .palette-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 150px;
+  }
+
+  /* 模拟挂件在竖屏手机上缩放适宜 */
+  #mockupOverlay {
+    padding: 24px 16px 100px;
+  }
+  .mockup-time {
+    font-size: 2.6rem;
+  }
+  .mockup-date {
+    font-size: 0.85rem;
+  }
+  .mockup-dock {
+    gap: 10px;
+    padding: 6px 12px;
+  }
+  .mockup-app-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
   }
 }

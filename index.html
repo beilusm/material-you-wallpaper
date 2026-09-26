@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Material You 极简壁纸工坊 (Compose M3)</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
     </div>
   </main>
 
-  <!-- 悬浮快捷控制 (Compose ExtendedFloatingActionButton) -->
+  <!-- 桌面端悬浮快捷按钮 (Compose ExtendedFloatingActionButton) -->
   <div class="floating-tools">
     <button class="m3-extended-fab" id="quickRandomBtn" title="快捷键: 空格键">
       <span>🎲</span> 换一个 (空格)
@@ -31,9 +31,36 @@
     </button>
   </div>
 
-  <!-- Compose ModalNavigationDrawer / SideSheet -->
+  <!-- 手机端规范 BottomAppBar (沉浸式底部导航栏) -->
+  <nav id="mobileBottomBar">
+    <button class="m3-bar-item" id="mobileRandomBtn">
+      <span class="bar-icon">🎲</span>
+      <span>换一个</span>
+    </button>
+    <button class="m3-bar-item" id="mobilePaletteBtn">
+      <span class="bar-icon">🎨</span>
+      <span>灵感色</span>
+    </button>
+    <button class="m3-bar-item" id="mobileMockupBtn">
+      <span class="bar-icon">📱</span>
+      <span>挂件</span>
+    </button>
+    <button class="m3-bar-item" id="mobileDownloadBtn">
+      <span class="bar-icon">📥</span>
+      <span>下载</span>
+    </button>
+    <button class="m3-bar-item" id="mobileSettingsBtn">
+      <span class="bar-icon">⚙️</span>
+      <span>调参</span>
+    </button>
+  </nav>
+
+  <!-- 移动端底栏抽屉背景遮罩 (ModalBottomSheet Scrim) -->
+  <div id="sheetScrim"></div>
+
+  <!-- Compose ModalBottomSheet / NavigationDrawer -->
   <aside id="panel">
-    <div class="m3-drag-handle"></div>
+    <div class="m3-drag-handle" id="sheetDragHandle" title="向下滑动关闭"></div>
 
     <div class="panel-header">
       <div class="panel-title">
@@ -44,7 +71,7 @@
         <button class="m3-icon-btn" id="themeToggleBtn" title="切换深色/浅色主题">☀️</button>
         <button class="m3-icon-btn" id="undoBtn" title="撤销 (Ctrl+Z)">↶</button>
         <button class="m3-icon-btn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">↷</button>
-        <button class="m3-icon-btn" id="closePanelBtn" title="折叠面板 (H)">✕</button>
+        <button class="m3-icon-btn" id="closePanelBtn" title="收起面板">✕</button>
       </div>
     </div>
 
@@ -165,7 +192,7 @@
         <button class="m3-btn m3-btn-filled" id="downloadPngBtn">
           <span>📥</span> 下载高清 PNG
         </button>
-        <button class="m3-btn m3-btn-tonal" id="copyClipboardBtn" title="复制到剪贴板 (Ctrl+C)">
+        <button class="m3-btn m3-btn-tonal" id="copyClipboardBtn" title="复制到剪贴板">
           <span>📋</span> 复制
         </button>
         <button class="m3-btn m3-btn-tonal" id="downloadSvgBtn" title="矢量 SVG 格式">

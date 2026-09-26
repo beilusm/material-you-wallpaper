@@ -12,6 +12,8 @@ export function setupControls(state, onStateChange, mockupManager) {
   const history = new HistoryManager(25);
   history.push(state);
 
+  const isMobile = window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
+
   // 初始化波浪随机参数
   state.waveParams = generateWaveParameters(state.seed);
 
@@ -29,7 +31,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       tab.classList.add('active');
       state.artMode = tab.dataset.mode;
       commitStateChange();
-      showToast(`切换至形态：${tab.textContent.trim()}`, 1200);
+      showToast(`形态：${tab.textContent.trim()}`, 1200);
     });
   });
 
@@ -76,6 +78,7 @@ export function setupControls(state, onStateChange, mockupManager) {
   c2Input.addEventListener('input', (e) => {
     state.color2 = e.target.value;
     document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
+    syncTheme();
     commitStateChange(false, false);
   });
   c2Input.addEventListener('change', () => commitStateChange());
@@ -91,7 +94,7 @@ export function setupControls(state, onStateChange, mockupManager) {
   });
 
   // 随机灵感配色
-  document.getElementById('randomPaletteBtn').addEventListener('click', () => {
+  function triggerRandomPalette() {
     const pair = generateRandomHarmoniousPalette();
     state.color1 = pair.c1;
     state.color2 = pair.c2;
@@ -100,8 +103,9 @@ export function setupControls(state, onStateChange, mockupManager) {
     document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
     syncTheme();
     commitStateChange();
-    showToast('🎨 已生成一组动态 Monet 配色！', 1500);
-  });
+    showToast('🎨 已生成灵感配色！', 1200);
+  }
+  document.getElementById('randomPaletteBtn').addEventListener('click', triggerRandomPalette);
 
   // 智能图片取色
   const imgFileInput = document.getElementById('imgFileInput');
@@ -112,7 +116,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      showToast('正在分析图片提取 Monet 色阶...');
+      showToast('正在分析图片提取色阶...');
       const pair = await extractPaletteFromImage(file);
       state.color1 = pair.c1;
       state.color2 = pair.c2;
@@ -121,7 +125,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
       syncTheme();
       commitStateChange();
-      showToast('✓ 成功提取图片配色并同步全局主题！');
+      showToast('✓ 成功提取图片配色！');
     } catch {
       showToast('图片分析失败，请换一张试一下');
     }
@@ -134,7 +138,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     state.isDark = !state.isDark;
     themeToggleBtn.textContent = state.isDark ? '☀️' : '🌙';
     syncTheme();
-    showToast(state.isDark ? '已切换至深色 Material 模式' : '已切换至浅色 Material 模式', 1200);
+    showToast(state.isDark ? '切换至深色模式' : '切换至浅色模式', 1200);
   });
 
   // 5. 滑块控制 (Compose Sliders)
@@ -151,6 +155,8 @@ export function setupControls(state, onStateChange, mockupManager) {
   });
   bandSlider.addEventListener('change', () => commitStateChange());
 
+  angleSlider.value = state.angle;
+  document.getElementById('angleVal').textContent = `${state.angle}°`;
   angleSlider.addEventListener('input', (e) => {
     state.angle = parseInt(e.target.value, 10);
     document.getElementById('angleVal').textContent = `${state.angle}°`;
@@ -196,7 +202,8 @@ export function setupControls(state, onStateChange, mockupManager) {
 
   RESOLUTION_PRESETS.forEach((res) => {
     const btn = document.createElement('button');
-    btn.className = `m3-res-card ${res.isDefault ? 'active' : ''}`;
+    const isThisActive = (state.targetW === res.w && state.targetH === res.h);
+    btn.className = `m3-res-card ${isThisActive ? 'active' : ''}`;
     btn.dataset.w = res.w;
     btn.dataset.h = res.h;
     btn.innerHTML = `
@@ -216,12 +223,13 @@ export function setupControls(state, onStateChange, mockupManager) {
   // 7. 随机造型生成
   function randomize() {
     state.seed = Math.floor(Math.random() * 1000000);
-    state.angle = -35 + Math.floor(Math.random() * 16 - 8);
+    const baseAngle = (window.innerWidth <= 768 || window.innerHeight > window.innerWidth) ? -55 : -35;
+    state.angle = baseAngle + Math.floor(Math.random() * 16 - 8);
     angleSlider.value = state.angle;
     document.getElementById('angleVal').textContent = `${state.angle}°`;
     state.waveParams = generateWaveParameters(state.seed);
     commitStateChange();
-    showToast('🎲 换了一个新造型！', 1200);
+    showToast('🎲 换了一个新造型！', 1000);
   }
 
   document.getElementById('randomBtn').addEventListener('click', randomize);
@@ -289,26 +297,88 @@ export function setupControls(state, onStateChange, mockupManager) {
     onStateChange(needsLayoutResize);
   }
 
-  // 9. 面板折叠
+  // 9. 侧边栏/抽屉控制 (ModalBottomSheet & Scrim)
   const panel = document.getElementById('panel');
-  document.getElementById('togglePanelBtn').addEventListener('click', () => {
-    panel.classList.toggle('collapsed');
-  });
-  document.getElementById('closePanelBtn').addEventListener('click', () => {
+  const scrim = document.getElementById('sheetScrim');
+
+  // 手机端初始状态：默认收起底栏，让用户立即完整看到高清壁纸！
+  if (isMobile) {
     panel.classList.add('collapsed');
+  }
+
+  function openSheet() {
+    panel.classList.remove('collapsed');
+    if (window.innerWidth <= 768) {
+      scrim.classList.add('active');
+    }
+  }
+
+  function closeSheet() {
+    panel.classList.add('collapsed');
+    scrim.classList.remove('active');
+  }
+
+  document.getElementById('togglePanelBtn').addEventListener('click', () => {
+    if (panel.classList.contains('collapsed')) {
+      openSheet();
+    } else {
+      closeSheet();
+    }
   });
 
-  // 10. 桌面挂件透视 (Mockup)
+  document.getElementById('closePanelBtn').addEventListener('click', closeSheet);
+  scrim.addEventListener('click', closeSheet);
+
+  // 拖拽手柄向下滑动手势关闭
+  let startTouchY = 0;
+  const dragHandle = document.getElementById('sheetDragHandle');
+  dragHandle.addEventListener('touchstart', (e) => {
+    startTouchY = e.touches[0].clientY;
+  }, { passive: true });
+  dragHandle.addEventListener('touchmove', (e) => {
+    const deltaY = e.touches[0].clientY - startTouchY;
+    if (deltaY > 50) {
+      closeSheet();
+    }
+  }, { passive: true });
+
+  // 10. 手机专属 BottomAppBar 按钮绑定
+  const mobileRandomBtn = document.getElementById('mobileRandomBtn');
+  const mobilePaletteBtn = document.getElementById('mobilePaletteBtn');
+  const mobileMockupBtn = document.getElementById('mobileMockupBtn');
+  const mobileDownloadBtn = document.getElementById('mobileDownloadBtn');
+  const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
+
+  if (mobileRandomBtn) mobileRandomBtn.addEventListener('click', randomize);
+  if (mobilePaletteBtn) mobilePaletteBtn.addEventListener('click', triggerRandomPalette);
+  if (mobileMockupBtn) {
+    mobileMockupBtn.addEventListener('click', () => {
+      const active = mockupManager.toggle();
+      showToast(active ? '📱 手机挂件已开启' : '关闭手机挂件', 1000);
+    });
+  }
+  if (mobileDownloadBtn) mobileDownloadBtn.addEventListener('click', downloadPNG);
+  if (mobileSettingsBtn) {
+    mobileSettingsBtn.addEventListener('click', () => {
+      if (panel.classList.contains('collapsed')) {
+        openSheet();
+      } else {
+        closeSheet();
+      }
+    });
+  }
+
+  // 11. 桌面挂件透视 (Mockup)
   const mockupBtn = document.getElementById('toggleMockupBtn');
   if (mockupBtn) {
     mockupBtn.addEventListener('click', () => {
       const isActive = mockupManager.toggle();
       mockupBtn.classList.toggle('active', isActive);
-      showToast(isActive ? '🖥️ 桌面挂件透视已开启' : '关闭桌面挂件透视', 1200);
+      showToast(isActive ? '🖥️ 桌面挂件已开启' : '关闭桌面挂件', 1000);
     });
   }
 
-  // 11. 导出与下载
+  // 12. 导出与下载
   async function downloadPNG() {
     showToast(`正在导出 ${state.targetW} × ${state.targetH} 高清壁纸...`, 2000);
     const blob = await exportToPNGBlob(state, state.targetW, state.targetH);
@@ -320,7 +390,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`✓ 已成功下载 ${state.targetW}×${state.targetH} 壁纸！`);
+    showToast(`✓ 已成功保存 ${state.targetW}×${state.targetH} 壁纸！`);
   }
 
   function downloadSVG() {
@@ -342,16 +412,16 @@ export function setupControls(state, onStateChange, mockupManager) {
   document.getElementById('downloadSvgBtn').addEventListener('click', downloadSVG);
   document.getElementById('copyClipboardBtn').addEventListener('click', copyClipboard);
 
-  // 12. 全局快捷键
+  // 13. 全局快捷键
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Space') {
       e.preventDefault();
       randomize();
     } else if (e.key === 'h' || e.key === 'H') {
-      panel.classList.toggle('collapsed');
+      if (panel.classList.contains('collapsed')) openSheet(); else closeSheet();
     } else if (e.key === 'm' || e.key === 'M') {
-      mockupBtn.click();
+      mockupManager.toggle();
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
       e.preventDefault();
       if (e.shiftKey) {
