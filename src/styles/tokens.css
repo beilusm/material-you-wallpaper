@@ -1,0 +1,35 @@
+:root {
+  /* Material You Dark Surface & Elevation */
+  --bg-app: #111413;
+  --surface: rgba(26, 31, 28, 0.88);
+  --surface-container: rgba(38, 45, 41, 0.65);
+  --surface-container-high: rgba(49, 58, 53, 0.8);
+  
+  /* Accent / Dynamic Primary Tokens */
+  --primary: #a6d3bd;
+  --on-primary: #123727;
+  --primary-container: #264e3c;
+  --on-primary-container: #c4eed9;
+  
+  /* Text & Outline */
+  --text-primary: #e1e3e0;
+  --text-secondary: #a0a6a2;
+  --text-tertiary: #757c77;
+  --outline: rgba(160, 166, 162, 0.18);
+  --outline-variant: rgba(160, 166, 162, 0.08);
+
+  /* Radius Tokens */
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-pill: 9999px;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.55);
+}

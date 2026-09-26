@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material You 极简波浪壁纸工坊</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 主画布视口 -->
+  <main id="viewport">
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="wallpaperCanvas"></canvas>
+    </div>
+  </main>
+
+  <!-- 悬浮快捷控制 -->
+  <div class="floating-tools">
+    <button class="fab" id="quickRandomBtn" title="快捷键: 空格键">
+      <span>🎲</span> 换一个 (空格)
+    </button>
+    <button class="fab" id="togglePanelBtn">
+      <span>⚙️</span> 调节参数 / 下载
+    </button>
+  </div>
+
+  <!-- 控制侧边栏面板 -->
+  <aside id="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span>Material You</span> 壁纸工坊
+      </div>
+      <button class="swap-btn" id="closePanelBtn" title="折叠面板">✕</button>
+    </div>
+
+    <div class="panel-content">
+      <!-- 预设调色板 -->
+      <section>
+        <div class="section-title">色彩方案 (Material Palette)</div>
+        <div class="palette-grid" id="paletteGrid"></div>
+        <div class="custom-colors">
+          <div class="color-picker-item">
+            <input type="color" id="color1Input" value="#b2ccc1">
+            <span>色彩 A</span>
+          </div>
+          <button class="swap-btn" id="swapColorsBtn" title="交换色彩">⇄</button>
+          <div class="color-picker-item">
+            <input type="color" id="color2Input" value="#e7f2ed">
+            <span>色彩 B</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 几何参数 -->
+      <section>
+        <div class="section-title">简约曲线形态</div>
+        <div class="control-group">
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>波浪条带数量</span>
+              <span class="slider-value" id="bandCountVal">4</span>
+            </div>
+            <input type="range" id="bandCountSlider" min="2" max="6" step="1" value="4">
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>流线倾斜角度</span>
+              <span class="slider-value" id="angleVal">-35°</span>
+            </div>
+            <input type="range" id="angleSlider" min="-85" max="85" step="1" value="-35">
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>波浪曲率弧度</span>
+              <span class="slider-value" id="curvVal">42%</span>
+            </div>
+            <input type="range" id="curvSlider" min="10" max="90" step="1" value="42">
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>波浪起伏频次</span>
+              <span class="slider-value" id="freqVal">简约单峰 (1x)</span>
+            </div>
+            <input type="range" id="freqSlider" min="1" max="3" step="1" value="1">
+          </div>
+
+          <label class="switch-row">
+            <span>层次柔和阴影 (Paper Depth)</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="shadowToggle">
+              <span class="slider-round"></span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- 目标分辨率 -->
+      <section>
+        <div class="section-title">目标输出分辨率</div>
+        <div class="res-grid" id="resGrid"></div>
+      </section>
+    </div>
+
+    <!-- 底部操作区 -->
+    <div class="panel-footer">
+      <button class="btn btn-random" id="randomBtn">
+        <span>🎲</span> 随机生成新造型 (Space)
+      </button>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="downloadPngBtn">
+          <span>📥</span> 下载高清 PNG
+        </button>
+        <button class="btn btn-secondary" id="downloadSvgBtn" title="矢量格式，任意缩放不失真">
+          <span>📐</span> 导出 SVG
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="toast"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
