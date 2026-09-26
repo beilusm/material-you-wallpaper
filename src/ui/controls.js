@@ -346,37 +346,61 @@ export function setupControls(state, onStateChange, mockupManager) {
     onStateChange(needsLayoutResize);
   }
 
-  // 9. 侧边栏/抽屉控制 (ModalBottomSheet & Scrim)
+  // 9. 侧边栏/抽屉控制 (ModalBottomSheet & Desktop SideSheet)
   const panel = document.getElementById('panel');
   const scrim = document.getElementById('sheetScrim');
 
-  // 手机端初始状态：默认收起底栏，让用户立即完整看到高清壁纸！
+  function isMobileMode() {
+    return window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
+  }
+
+  // 手机端初始状态：默认收起底栏；桌面端默认展开侧边面板
   if (isMobile) {
     panel.classList.add('collapsed');
+    document.body.classList.add('panel-collapsed');
   }
 
   function openSheet() {
     panel.classList.remove('collapsed');
-    scrim.classList.add('active');
+    document.body.classList.remove('panel-collapsed');
+    if (isMobileMode()) {
+      scrim.classList.add('active');
+    } else {
+      scrim.classList.remove('active');
+    }
+    onStateChange(true);
+    setTimeout(() => onStateChange(true), 360);
   }
 
   function closeSheet() {
     panel.classList.add('collapsed');
+    document.body.classList.add('panel-collapsed');
     scrim.classList.remove('active');
+    onStateChange(true);
+    setTimeout(() => onStateChange(true), 360);
   }
 
-  document.getElementById('togglePanelBtn').addEventListener('click', () => {
-    if (panel.classList.contains('collapsed')) {
-      openSheet();
-    } else {
-      closeSheet();
-    }
-  });
+  const togglePanelBtn = document.getElementById('togglePanelBtn');
+  if (togglePanelBtn) {
+    togglePanelBtn.addEventListener('click', () => {
+      if (panel.classList.contains('collapsed')) {
+        openSheet();
+      } else {
+        closeSheet();
+      }
+    });
+  }
 
   document.getElementById('closePanelBtn').addEventListener('click', closeSheet);
   scrim.addEventListener('click', closeSheet);
 
-  // 拖拽手柄向下滑动手势关闭
+  window.addEventListener('resize', () => {
+    if (!isMobileMode()) {
+      scrim.classList.remove('active');
+    }
+  });
+
+  // 拖拽手柄向下滑动手势关闭 (移动端)
   let startTouchY = 0;
   const dragHandle = document.getElementById('sheetDragHandle');
   dragHandle.addEventListener('touchstart', (e) => {
@@ -408,15 +432,23 @@ export function setupControls(state, onStateChange, mockupManager) {
     });
   }
 
-  // 11. 桌面挂件透视 (Mockup)
+  // 11. 桌面挂件透视 (Mockup) 状态联动
   const mockupBtn = document.getElementById('toggleMockupBtn');
-  if (mockupBtn) {
-    mockupBtn.addEventListener('click', () => {
-      const isActive = mockupManager.toggle();
-      mockupBtn.classList.toggle('active', isActive);
-      showToast(isActive ? '已开启桌面预览' : '已关闭桌面预览', 1000, 'devices');
-    });
+  const panelMockupBtn = document.getElementById('panelMockupBtn');
+
+  function toggleMockup() {
+    const isActive = mockupManager.toggle();
+    if (mockupBtn) mockupBtn.classList.toggle('active', isActive);
+    if (panelMockupBtn) panelMockupBtn.classList.toggle('active', isActive);
+    showToast(isActive ? '已开启桌面预览' : '已关闭桌面预览', 1000, 'devices');
   }
+
+  if (mockupBtn) mockupBtn.addEventListener('click', toggleMockup);
+  if (panelMockupBtn) panelMockupBtn.addEventListener('click', toggleMockup);
+
+  // 桌面端快捷全屏栏下载按钮
+  const quickDownloadBtn = document.getElementById('quickDownloadBtn');
+  if (quickDownloadBtn) quickDownloadBtn.addEventListener('click', downloadPNG);
 
   // 12. 导出与下载
   async function downloadPNG() {
@@ -461,7 +493,7 @@ export function setupControls(state, onStateChange, mockupManager) {
     } else if (e.key === 'h' || e.key === 'H') {
       if (panel.classList.contains('collapsed')) openSheet(); else closeSheet();
     } else if (e.key === 'm' || e.key === 'M') {
-      mockupManager.toggle();
+      toggleMockup();
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
       e.preventDefault();
       if (e.shiftKey) {

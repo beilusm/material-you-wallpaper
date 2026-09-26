@@ -20,19 +20,23 @@
     </div>
   </main>
 
-  <!-- 桌面端悬浮快捷按钮 (Compose ExtendedFloatingActionButton) -->
-  <div class="floating-tools">
-    <button class="m3-extended-fab" id="quickRandomBtn" title="快捷键: 空格键">
+  <!-- 桌面端全屏悬浮快捷栏 (仅在收起侧栏后呈现，与侧栏互补，避免按键重复) -->
+  <div class="floating-tools" id="floatingTools">
+    <button class="m3-extended-fab m3-fab-primary" id="togglePanelBtn" title="展开控制面板 (快捷键: H)">
+      <span class="material-symbols-rounded">tune</span>
+      <span>展开面板</span>
+    </button>
+    <button class="m3-extended-fab" id="quickRandomBtn" title="快捷随机造型 (快捷键: 空格键)">
       <span class="material-symbols-rounded">casino</span>
       <span>随机造型</span>
     </button>
-    <button class="m3-extended-fab" id="toggleMockupBtn" title="快捷键: M">
+    <button class="m3-extended-fab" id="toggleMockupBtn" title="桌面小组件预览 (快捷键: M)">
       <span class="material-symbols-rounded">devices</span>
       <span>桌面挂件</span>
     </button>
-    <button class="m3-extended-fab" id="togglePanelBtn" title="快捷键: H">
-      <span class="material-symbols-rounded">tune</span>
-      <span>控制面板</span>
+    <button class="m3-extended-fab" id="quickDownloadBtn" title="快捷下载当前壁纸 (快捷键: Ctrl+S)">
+      <span class="material-symbols-rounded">download</span>
+      <span>下载壁纸</span>
     </button>
   </div>
 
@@ -60,7 +64,7 @@
     </button>
   </nav>
 
-  <!-- 移动端底栏抽屉背景遮罩 (ModalBottomSheet Scrim) -->
+  <!-- 移动端底栏抽屉背景遮罩 (ModalBottomSheet Scrim，仅移动端启用) -->
   <div id="sheetScrim"></div>
 
   <!-- Compose ModalBottomSheet / NavigationDrawer -->
@@ -76,14 +80,17 @@
         <button class="m3-icon-btn" id="themeToggleBtn" title="切换深色/浅色主题">
           <span class="material-symbols-rounded" id="themeIcon">light_mode</span>
         </button>
+        <button class="m3-icon-btn" id="panelMockupBtn" title="桌面小组件预览 (快捷键: M)">
+          <span class="material-symbols-rounded">devices</span>
+        </button>
         <button class="m3-icon-btn" id="undoBtn" title="撤销 (Ctrl+Z)">
           <span class="material-symbols-rounded">undo</span>
         </button>
         <button class="m3-icon-btn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">
           <span class="material-symbols-rounded">redo</span>
         </button>
-        <button class="m3-icon-btn" id="closePanelBtn" title="收起面板">
-          <span class="material-symbols-rounded">close</span>
+        <button class="m3-icon-btn" id="closePanelBtn" title="收起控制面板 (快捷键: H)">
+          <span class="material-symbols-rounded">dock_to_right</span>
         </button>
       </div>
     </div>

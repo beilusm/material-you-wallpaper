@@ -46,7 +46,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--md-sys-elevation-level3);
-  z-index: 100;
+  z-index: 200;
   transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s;
 }
 
@@ -56,21 +56,9 @@
   pointer-events: none;
 }
 
-/* 遮罩背景层 (Mobile Scrim) */
+/* 遮罩背景层 (仅移动端生效，PC 桌面端完全禁用隐藏，杜绝蒙层遮挡) */
 #sheetScrim {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1);
-  z-index: 1050;
-}
-#sheetScrim.active {
-  opacity: 1;
-  pointer-events: auto;
+  display: none;
 }
 
 /* 顶部拖拽把手 (Compose BottomSheet DragHandle) */
@@ -572,22 +560,33 @@ input:checked + .m3-switch-track:before {
   border-color: var(--md-sys-color-primary);
 }
 
-/* 8. Desktop Floating Tools */
+/* 8. Desktop Floating Tools (全屏沉浸预览时的快捷悬浮栏) */
 .floating-tools {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
+  bottom: 24px;
+  left: 24px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1), transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* 当侧栏收起时，桌面端悬浮栏优雅淡入，避免与侧栏按键同时出现造成视觉冗余 */
+body.panel-collapsed .floating-tools {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .m3-extended-fab {
   height: 44px;
   padding: 0 18px;
   border-radius: var(--md-shape-corner-large);
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
   border: 1px solid var(--md-sys-color-outline-variant);
   font-family: inherit;
   font-size: 0.84rem;
@@ -602,11 +601,27 @@ input:checked + .m3-switch-track:before {
 .m3-extended-fab .material-symbols-rounded {
   font-size: 20px;
 }
-.m3-extended-fab:hover, .m3-extended-fab.active {
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+.m3-extended-fab:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-primary);
   transform: translateY(-2px);
   box-shadow: var(--md-sys-elevation-level4);
+}
+.m3-extended-fab.active {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+/* 强调型主操作 FAB */
+.m3-extended-fab.m3-fab-primary {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-color: transparent;
+}
+.m3-extended-fab.m3-fab-primary:hover {
+  background: var(--md-sys-color-primary);
+  filter: brightness(1.1);
+  color: var(--md-sys-color-on-primary);
 }
 
 /* 9. Compose M3 Snackbar / Toast */
@@ -713,9 +728,40 @@ input:checked + .m3-switch-track:before {
   display: none;
 }
 
+/* PC 桌面端 (横屏大屏)：侧栏开启时自动右侧预留 442px 留白，让画布始终居中且完全不被侧栏遮挡 */
+@media (min-width: 769px) and (orientation: landscape) {
+  #viewport {
+    padding: 24px;
+    padding-right: 442px;
+    transition: padding-right 0.35s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  body.panel-collapsed #viewport {
+    padding-right: 24px;
+  }
+}
+
 @media (max-width: 768px), (orientation: portrait) {
   .floating-tools {
     display: none !important;
+  }
+
+  /* 移动端专属遮罩层 */
+  #sheetScrim {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1);
+    z-index: 1050;
+  }
+  #sheetScrim.active {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   #viewport {
