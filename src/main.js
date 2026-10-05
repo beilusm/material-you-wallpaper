@@ -1,7 +1,13 @@
 import './styles/main.css';
+import './styles/components.css';
 import { setupControls } from './ui/controls.js';
 import { renderWallpaper } from './core/renderer.js';
 import { setupMockupOverlay } from './ui/mockup.js';
+import { fitPreview } from './core/layout.js';
+import { createDefaultState } from './core/state.js';
+import { browserStorage, restoreSession, saveSession } from './core/session.js';
+import { showToast } from './ui/toast.js';
+import { isMobileLayout } from './ui/layout.js';
 
 // 解决移动端浏览器（Chrome/Safari）底栏遮挡的关键：动态计算实际视口高度
 function syncAppHeight() {
@@ -9,36 +15,21 @@ function syncAppHeight() {
   document.documentElement.style.setProperty('--app-height', `${h}px`);
 }
 syncAppHeight();
-window.addEventListener('resize', syncAppHeight);
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', syncAppHeight);
-}
 
-// 屏幕规格自适应检测
-function checkIsPortrait() {
-  return window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
-}
-const isPortraitInitial = checkIsPortrait();
+const isPortraitInitial = isMobileLayout();
 
-// 应用根状态 (Jetpack Compose Material 3 驱动)
-const state = {
-  artMode: 'waves', // 'waves' | 'pebbles' | 'topography'
-  isDark: true,     // Material 3 深浅主题切换
-  // 手机端优先竖屏黄金比例 1080×2400，桌面端优先 2736×1824 (3:2)
-  targetW: isPortraitInitial ? 1080 : 2736,
-  targetH: isPortraitInitial ? 2400 : 1824,
-  color1: '#b2ccc1',
-  color2: '#e7f2ed',
-  bandCount: 4,
-  angle: isPortraitInitial ? -55 : -35,
-  curvature: 0.42,
-  harmonics: 1,
-  hasShadow: false,
-  useGradient: false,
-  grain: 0.0,
-  seed: 42,
-  waveParams: []
-};
+const storage = browserStorage();
+const restored = restoreSession(createDefaultState(isPortraitInitial), storage, location.hash);
+const state = restored.state;
+let saveTimer;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveSession(state, storage), 250);
+}
+window.addEventListener('pagehide', () => {
+  clearTimeout(saveTimer);
+  saveSession(state, storage);
+});
 
 const canvas = document.getElementById('wallpaperCanvas');
 const ctx = canvas.getContext('2d');
@@ -52,30 +43,17 @@ const mockupManager = setupMockupOverlay(wrapper);
  * 根据容器比例与目标分辨率自适应计算居中预览画布
  */
 function updateCanvasLayout() {
-  const isPortrait = checkIsPortrait();
-  // 移动端为底部导航栏与边距预留足量呼吸空间
-  const padX = isPortrait ? 24 : 48;
-  const padY = isPortrait ? 116 : 48;
-
-  const maxW = Math.max(100, viewport.clientWidth - padX);
-  const maxH = Math.max(100, viewport.clientHeight - padY);
-  const aspect = state.targetW / state.targetH;
-
-  let renderW, renderH;
-  if (maxW / maxH > aspect) {
-    renderH = maxH;
-    renderW = maxH * aspect;
-  } else {
-    renderW = maxW;
-    renderH = maxW / aspect;
-  }
-
-  wrapper.style.width = `${Math.round(renderW)}px`;
-  wrapper.style.height = `${Math.round(renderH)}px`;
-
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.round(renderW * dpr);
-  canvas.height = Math.round(renderH * dpr);
+  const style = getComputedStyle(viewport);
+  const availableWidth = viewport.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  const availableHeight = viewport.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+  const { cssWidth, cssHeight, pixelWidth, pixelHeight } = fitPreview({
+    availableWidth, availableHeight, targetW: state.targetW, targetH: state.targetH,
+    dpr: window.devicePixelRatio || 1
+  });
+  wrapper.style.width = `${cssWidth}px`;
+  wrapper.style.height = `${cssHeight}px`;
+  if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+  if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
 }
 
 /**
@@ -83,36 +61,44 @@ function updateCanvasLayout() {
  */
 function draw() {
   ctx.save();
-  ctx.scale(canvas.width / state.targetW, canvas.height / state.targetH);
-  renderWallpaper(ctx, state, state.targetW, state.targetH);
-  ctx.restore();
+  try {
+    ctx.scale(canvas.width / state.targetW, canvas.height / state.targetH);
+    renderWallpaper(ctx, state, state.targetW, state.targetH);
+  } finally {
+    ctx.restore();
+  }
 }
 
 /**
  * 状态变化响应
  */
+let frame = null;
+let needsLayout = false;
 function handleStateChange(needsLayoutResize = false) {
-  if (needsLayoutResize) {
-    updateCanvasLayout();
-  }
-  draw();
+  needsLayout ||= needsLayoutResize;
+  if (frame !== null) return;
+  frame = requestAnimationFrame(() => {
+    frame = null;
+    if (needsLayout) {
+      updateCanvasLayout();
+      needsLayout = false;
+    }
+    draw();
+    scheduleSave();
+  });
 }
 
-// 初始化
 setupControls(state, handleStateChange, mockupManager);
 updateCanvasLayout();
 draw();
+if (restored.error) showToast(restored.error, 3500, 'error');
+else if (restored.source === 'shared') showToast('已载入分享作品', 2000, 'link');
 
-window.addEventListener('resize', () => {
+function resizePreview() {
   syncAppHeight();
-  updateCanvasLayout();
-  draw();
-});
-
-window.addEventListener('orientationchange', () => {
-  setTimeout(() => {
-    syncAppHeight();
-    updateCanvasLayout();
-    draw();
-  }, 200);
-});
+  handleStateChange(true);
+}
+window.addEventListener('resize', resizePreview);
+window.visualViewport?.addEventListener('resize', resizePreview);
+new ResizeObserver(() => handleStateChange(true)).observe(viewport);
+window.addEventListener('orientationchange', resizePreview);

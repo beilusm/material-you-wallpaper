@@ -1,0 +1,66 @@
+{
+  "recordedAt": "2026-10-05T09:38:32.157Z",
+  "browser": "153.0.8010.52",
+  "records": [
+    {
+      "mode": "waves",
+      "effects": false,
+      "width": 5472,
+      "height": 3648,
+      "durationMs": 659,
+      "maxFrameGapMs": 133,
+      "frames": 27,
+      "bytes": 566491
+    },
+    {
+      "mode": "waves",
+      "effects": true,
+      "width": 5472,
+      "height": 3648,
+      "durationMs": 2697,
+      "maxFrameGapMs": 1550,
+      "frames": 71,
+      "bytes": 32887527
+    },
+    {
+      "mode": "pebbles",
+      "effects": false,
+      "width": 5472,
+      "height": 3648,
+      "durationMs": 110,
+      "maxFrameGapMs": 33,
+      "frames": 7,
+      "bytes": 490117
+    },
+    {
+      "mode": "pebbles",
+      "effects": true,
+      "width": 5472,
+      "height": 3648,
+      "durationMs": 1531,
+      "maxFrameGapMs": 550,
+      "frames": 61,
+      "bytes": 27574700
+    },
+    {
+      "mode": "topography",
+      "effects": false,
+      "width": 5472,
+      "height": 3648,
+      "durationMs": 135,
+      "maxFrameGapMs": 50,
+      "frames": 7,
+      "bytes": 661850
+    },
+    {
+      "mode": "topography",
+      "effects": true,
+      "width": 5472,
+      "height": 3648,
+      "durationMs": 2963,
+      "maxFrameGapMs": 1817,
+      "frames": 71,
+      "bytes": 32859613
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import { hslToHex } from '../core/color.js';
+
 /**
  * Material You 自然和谐调色板预设 (精选 12 种自然美学方案)
  * 采用低饱和、高明度差配比，契合 M3 Monet 动态着色美学
@@ -26,15 +28,4 @@ export function generateRandomHarmoniousPalette() {
   const c1 = hslToHex(h, s, 68);
   const c2 = hslToHex(h, Math.max(15, s - 10), 93);
   return { c1, c2 };
-}
-
-function hslToHex(h, s, l) {
-  l /= 100;
-  const a = (s * Math.min(l, 1 - l)) / 100;
-  const f = n => {
-    const k = (n + h / 30) % 12;
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-    return Math.round(255 * color).toString(16).padStart(2, '0');
-  };
-  return `#${f(0)}${f(8)}${f(4)}`;
 }

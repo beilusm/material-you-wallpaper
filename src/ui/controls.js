@@ -1,21 +1,20 @@
-import { PALETTES, generateRandomHarmoniousPalette } from '../constants/palettes.js';
 import { RESOLUTION_PRESETS } from '../constants/presets.js';
-import { generateWaveParameters } from '../core/geometry.js';
-import { exportToPNGBlob, copyImageToClipboard } from '../core/renderer.js';
-import { exportToSVGFile } from '../core/svg-exporter.js';
-import { extractPaletteFromImage } from '../core/extractor.js';
 import { HistoryManager } from '../core/history.js';
+import { snapshotWallpaper } from '../core/state.js';
+import { validateDimensions, MAX_SEED } from '../core/validation.js';
+import { createShareURL, wallpaperFromHash, browserStorage, saveSession } from '../core/session.js';
 import { applyMaterialTheme } from '../core/monet.js';
 import { showToast } from './toast.js';
+import { setupExportControls } from './exports.js';
+import { setupPanelControls } from './panel.js';
+import { setupColorControls } from './colors.js';
+import { setupKeyboardShortcuts } from './shortcuts.js';
 
 export function setupControls(state, onStateChange, mockupManager) {
   const history = new HistoryManager(25);
   history.push(state);
-
-  const isMobile = window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
-
-  // 初始化波浪随机参数
-  state.waveParams = generateWaveParameters(state.seed);
+  const exportControls = setupExportControls(state);
+  const { downloadPNG, copyClipboard } = exportControls;
 
   // 1. 初始化并联动 Jetpack Compose 动态主题 (DynamicColorScheme)
   function syncTheme() {
@@ -30,6 +29,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       modeTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       state.artMode = tab.dataset.mode;
+      syncModeSelection();
       commitStateChange();
       const label = tab.querySelector('span:not(.material-symbols-rounded)')?.textContent.trim() || tab.textContent.trim();
       const icon = tab.querySelector('.material-symbols-rounded')?.textContent.trim() || 'category';
@@ -37,101 +37,8 @@ export function setupControls(state, onStateChange, mockupManager) {
     });
   });
 
-  // 3. 调色板预设渲染 (Compose FilterChips)
-  const paletteGrid = document.getElementById('paletteGrid');
-  paletteGrid.innerHTML = '';
-
-  PALETTES.forEach((p, idx) => {
-    const btn = document.createElement('button');
-    btn.className = `m3-filter-chip ${idx === 0 ? 'active' : ''}`;
-    btn.dataset.id = p.id;
-    btn.innerHTML = `
-      <div class="color-swatches">
-        <div class="swatch" style="background: ${p.c1}"></div>
-        <div class="swatch" style="background: ${p.c2}"></div>
-      </div>
-      <span>${p.name}</span>
-    `;
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.color1 = p.c1;
-      state.color2 = p.c2;
-      document.getElementById('color1Input').value = p.c1;
-      document.getElementById('color2Input').value = p.c2;
-      syncTheme();
-      commitStateChange();
-    });
-    paletteGrid.appendChild(btn);
-  });
-
-  // 4. 自定义拾色器
-  const c1Input = document.getElementById('color1Input');
-  const c2Input = document.getElementById('color2Input');
-
-  c1Input.addEventListener('input', (e) => {
-    state.color1 = e.target.value;
-    document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
-    syncTheme();
-    commitStateChange(false, false);
-  });
-  c1Input.addEventListener('change', () => commitStateChange());
-
-  c2Input.addEventListener('input', (e) => {
-    state.color2 = e.target.value;
-    document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
-    syncTheme();
-    commitStateChange(false, false);
-  });
-  c2Input.addEventListener('change', () => commitStateChange());
-
-  document.getElementById('swapColorsBtn').addEventListener('click', () => {
-    const temp = state.color1;
-    state.color1 = state.color2;
-    state.color2 = temp;
-    c1Input.value = state.color1;
-    c2Input.value = state.color2;
-    syncTheme();
-    commitStateChange();
-  });
-
-  // 随机灵感配色
-  function triggerRandomPalette() {
-    const pair = generateRandomHarmoniousPalette();
-    state.color1 = pair.c1;
-    state.color2 = pair.c2;
-    c1Input.value = pair.c1;
-    c2Input.value = pair.c2;
-    document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
-    syncTheme();
-    commitStateChange();
-    showToast('已生成灵感配色', 1200, 'palette');
-  }
-  document.getElementById('randomPaletteBtn').addEventListener('click', triggerRandomPalette);
-
-  // 智能图片取色
-  const imgFileInput = document.getElementById('imgFileInput');
-  document.getElementById('extractFromImgBtn').addEventListener('click', () => {
-    imgFileInput.click();
-  });
-  imgFileInput.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      showToast('正在分析图片提取色阶...', 2000, 'image_search');
-      const pair = await extractPaletteFromImage(file);
-      state.color1 = pair.c1;
-      state.color2 = pair.c2;
-      c1Input.value = pair.c1;
-      c2Input.value = pair.c2;
-      document.querySelectorAll('.m3-filter-chip').forEach(b => b.classList.remove('active'));
-      syncTheme();
-      commitStateChange();
-      showToast('成功提取图片配色！', 2000, 'check_circle');
-    } catch {
-      showToast('图片分析失败，请换一张试一下', 2500, 'error');
-    }
-    imgFileInput.value = '';
+  const colorControls = setupColorControls(state, {
+    onChange: pushHistory => { syncTheme(); commitStateChange(false, pushHistory); }
   });
 
   // 深浅主题切换 (Material Symbols Rounded 图标切换)
@@ -146,6 +53,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       themeIcon.textContent = state.isDark ? 'dark_mode' : 'light_mode';
     }
     syncTheme();
+    saveSession(state, browserStorage());
     showToast(state.isDark ? '已切换至深色模式' : '已切换至浅色模式', 1200, state.isDark ? 'dark_mode' : 'light_mode');
   });
 
@@ -158,7 +66,7 @@ export function setupControls(state, onStateChange, mockupManager) {
 
   bandSlider.addEventListener('input', (e) => {
     state.bandCount = parseInt(e.target.value, 10);
-    document.getElementById('bandCountVal').textContent = state.bandCount;
+    syncModeControls();
     commitStateChange(false, false);
   });
   bandSlider.addEventListener('change', () => commitStateChange());
@@ -182,7 +90,7 @@ export function setupControls(state, onStateChange, mockupManager) {
   const freqLabels = ['简约单峰 (1x)', '双重流线 (2x)', '自然水波 (3x)'];
   freqSlider.addEventListener('input', (e) => {
     state.harmonics = parseInt(e.target.value, 10);
-    document.getElementById('freqVal').textContent = freqLabels[state.harmonics - 1];
+    syncModeControls();
     commitStateChange(false, false);
   });
   freqSlider.addEventListener('change', () => commitStateChange());
@@ -212,6 +120,7 @@ export function setupControls(state, onStateChange, mockupManager) {
       const btn = document.createElement('button');
       const isThisActive = (state.targetW === res.w && state.targetH === res.h);
       btn.className = `m3-res-card ${isThisActive ? 'active' : ''}`;
+      btn.setAttribute('aria-pressed', String(isThisActive));
       btn.dataset.w = res.w;
       btn.dataset.h = res.h;
       btn.innerHTML = `
@@ -223,6 +132,7 @@ export function setupControls(state, onStateChange, mockupManager) {
         btn.classList.add('active');
         state.targetW = res.w;
         state.targetH = res.h;
+        syncResolutionSelection();
         updateMobileRatioLabel();
         commitStateChange(true);
       });
@@ -230,6 +140,41 @@ export function setupControls(state, onStateChange, mockupManager) {
     });
   }
   refreshResGrid();
+
+  const outputWidthInput = document.getElementById('outputWidthInput');
+  const outputHeightInput = document.getElementById('outputHeightInput');
+  function syncOutputFields() {
+    outputWidthInput.value = state.targetW;
+    outputHeightInput.value = state.targetH;
+    document.getElementById('outputSizeHint').textContent = `${state.targetW} × ${state.targetH} · ${(state.targetW * state.targetH / 1000000).toFixed(1)} MP`;
+  }
+  function applyOutputDimensions() {
+    const width = Number(outputWidthInput.value), height = Number(outputHeightInput.value);
+    try {
+      validateDimensions(width, height);
+      state.targetW = width; state.targetH = height;
+      refreshResGrid(); updateMobileRatioLabel();
+      commitStateChange(true);
+    } catch (error) { showToast(error.message, 3500, 'error'); }
+  }
+  document.getElementById('customResolutionForm').addEventListener('submit', e => {
+    e.preventDefault(); applyOutputDimensions();
+  });
+  document.getElementById('swapDimensionsBtn').addEventListener('click', () => {
+    const width = outputWidthInput.value;
+    outputWidthInput.value = outputHeightInput.value;
+    outputHeightInput.value = width;
+    applyOutputDimensions();
+  });
+  document.getElementById('seedForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const seed = Number(document.getElementById('seedInput').value);
+    if (!Number.isInteger(seed) || seed < 0 || seed > MAX_SEED) {
+      showToast(`种子必须为 0 至 ${MAX_SEED} 的整数`, 2500, 'error'); return;
+    }
+    state.seed = seed;
+    commitStateChange();
+  });
 
   // 移动端快速比例切换 (手机竖屏 9:20 与 电脑横屏 3:2 互切)
   const mobileRatioBtn = document.getElementById('mobileRatioBtn');
@@ -269,12 +214,12 @@ export function setupControls(state, onStateChange, mockupManager) {
   // 7. 随机造型生成
   function randomize() {
     state.seed = Math.floor(Math.random() * 1000000);
+    document.getElementById('seedInput').value = state.seed;
     const isPortrait = state.targetH > state.targetW;
     const baseAngle = isPortrait ? -55 : -35;
     state.angle = baseAngle + Math.floor(Math.random() * 16 - 8);
     angleSlider.value = state.angle;
     document.getElementById('angleVal').textContent = `${state.angle}°`;
-    state.waveParams = generateWaveParameters(state.seed);
     commitStateChange();
     showToast('已生成全新造型', 1000, 'casino');
   }
@@ -292,20 +237,19 @@ export function setupControls(state, onStateChange, mockupManager) {
   }
 
   function applySnapshot(snap) {
+    colorControls.cancelExtraction(true);
     Object.assign(state, snap);
-    state.waveParams = generateWaveParameters(state.seed);
 
-    modeTabs.forEach(t => t.classList.toggle('active', t.dataset.mode === state.artMode));
-    c1Input.value = state.color1;
-    c2Input.value = state.color2;
+    syncModeSelection();
+    colorControls.sync();
     bandSlider.value = state.bandCount;
-    document.getElementById('bandCountVal').textContent = state.bandCount;
+    syncModeControls();
     angleSlider.value = state.angle;
     document.getElementById('angleVal').textContent = `${state.angle}°`;
     curvSlider.value = Math.round(state.curvature * 100);
     document.getElementById('curvVal').textContent = `${curvSlider.value}%`;
     freqSlider.value = state.harmonics;
-    document.getElementById('freqVal').textContent = freqLabels[state.harmonics - 1];
+    syncModeControls();
     grainSlider.value = Math.round(state.grain * 100);
     document.getElementById('grainVal').textContent = `${grainSlider.value}%`;
     document.getElementById('shadowToggle').checked = state.hasShadow;
@@ -313,6 +257,9 @@ export function setupControls(state, onStateChange, mockupManager) {
 
     updateMobileRatioLabel();
     refreshResGrid();
+    syncOutputFields();
+    document.getElementById('seedInput').value = state.seed;
+    colorControls.sync();
     syncTheme();
     onStateChange(true);
     updateUndoRedoUI();
@@ -338,7 +285,39 @@ export function setupControls(state, onStateChange, mockupManager) {
     });
   }
 
+  function syncModeControls() {
+    const mode = state.artMode;
+    const labels = { waves: '条带数量', pebbles: '圆石数量', topography: '等高线层数' };
+    document.getElementById('bandCountLabel').textContent = labels[mode];
+    document.getElementById('bandCountVal').textContent = state.bandCount + (mode === 'pebbles' ? 1 : mode === 'topography' ? 2 : 0);
+    document.getElementById('freqControl').hidden = mode === 'pebbles';
+    document.getElementById('freqVal').textContent = mode === 'topography'
+      ? ['三重起伏', '四重起伏', '五重起伏'][state.harmonics - 1] : freqLabels[state.harmonics - 1];
+    document.getElementById('angleLabel').textContent = mode === 'waves' ? '流线倾斜角度' : '渐变方向';
+    angleSlider.disabled = mode !== 'waves' && !state.useGradient;
+    angleSlider.closest('.m3-slider-item').classList.toggle('control-disabled', angleSlider.disabled);
+  }
+
+  function syncModeSelection() {
+    modeTabs.forEach(tab => {
+      const active = tab.dataset.mode === state.artMode;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function syncResolutionSelection() {
+    resGrid.querySelectorAll('.m3-res-card').forEach(btn => {
+      const active = Number(btn.dataset.w) === state.targetW && Number(btn.dataset.h) === state.targetH;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+
   function commitStateChange(needsLayoutResize = false, pushHistory = true) {
+    colorControls.sync();
+    syncModeControls();
+    if (needsLayoutResize) syncOutputFields();
     if (pushHistory) {
       history.push(state);
       updateUndoRedoUI();
@@ -346,91 +325,11 @@ export function setupControls(state, onStateChange, mockupManager) {
     onStateChange(needsLayoutResize);
   }
 
-  // 9. 侧边栏/抽屉控制 (ModalBottomSheet & Desktop SideSheet)
-  const panel = document.getElementById('panel');
-  const scrim = document.getElementById('sheetScrim');
-
-  function isMobileMode() {
-    return window.innerWidth <= 768 || window.innerHeight > window.innerWidth;
-  }
-
-  // 手机端初始状态：默认收起底栏；桌面端默认展开侧边面板
-  if (isMobile) {
-    panel.classList.add('collapsed');
-    document.body.classList.add('panel-collapsed');
-  }
-
-  function openSheet() {
-    panel.classList.remove('collapsed');
-    document.body.classList.remove('panel-collapsed');
-    if (isMobileMode()) {
-      scrim.classList.add('active');
-    } else {
-      scrim.classList.remove('active');
-    }
-    onStateChange(true);
-    setTimeout(() => onStateChange(true), 360);
-  }
-
-  function closeSheet() {
-    panel.classList.add('collapsed');
-    document.body.classList.add('panel-collapsed');
-    scrim.classList.remove('active');
-    onStateChange(true);
-    setTimeout(() => onStateChange(true), 360);
-  }
-
-  const togglePanelBtn = document.getElementById('togglePanelBtn');
-  if (togglePanelBtn) {
-    togglePanelBtn.addEventListener('click', () => {
-      if (panel.classList.contains('collapsed')) {
-        openSheet();
-      } else {
-        closeSheet();
-      }
-    });
-  }
-
-  document.getElementById('closePanelBtn').addEventListener('click', closeSheet);
-  scrim.addEventListener('click', closeSheet);
-
-  window.addEventListener('resize', () => {
-    if (!isMobileMode()) {
-      scrim.classList.remove('active');
-    }
+  const { toggleSheet } = setupPanelControls({
+    onStateChange, onModalChange: exportControls.setModalContainer
   });
-
-  // 拖拽手柄向下滑动手势关闭 (移动端)
-  let startTouchY = 0;
-  const dragHandle = document.getElementById('sheetDragHandle');
-  dragHandle.addEventListener('touchstart', (e) => {
-    startTouchY = e.touches[0].clientY;
-  }, { passive: true });
-  dragHandle.addEventListener('touchmove', (e) => {
-    const deltaY = e.touches[0].clientY - startTouchY;
-    if (deltaY > 50) {
-      closeSheet();
-    }
-  }, { passive: true });
-
-  // 10. 手机专属 BottomAppBar 按钮绑定
-  const mobileRandomBtn = document.getElementById('mobileRandomBtn');
-  const mobilePaletteBtn = document.getElementById('mobilePaletteBtn');
-  const mobileDownloadBtn = document.getElementById('mobileDownloadBtn');
-  const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
-
-  if (mobileRandomBtn) mobileRandomBtn.addEventListener('click', randomize);
-  if (mobilePaletteBtn) mobilePaletteBtn.addEventListener('click', triggerRandomPalette);
-  if (mobileDownloadBtn) mobileDownloadBtn.addEventListener('click', downloadPNG);
-  if (mobileSettingsBtn) {
-    mobileSettingsBtn.addEventListener('click', () => {
-      if (panel.classList.contains('collapsed')) {
-        openSheet();
-      } else {
-        closeSheet();
-      }
-    });
-  }
+  document.getElementById('mobileRandomBtn').addEventListener('click', randomize);
+  document.getElementById('mobilePaletteBtn').addEventListener('click', colorControls.randomize);
 
   // 11. 桌面挂件透视 (Mockup) 状态联动
   const mockupBtn = document.getElementById('toggleMockupBtn');
@@ -438,76 +337,49 @@ export function setupControls(state, onStateChange, mockupManager) {
 
   function toggleMockup() {
     const isActive = mockupManager.toggle();
-    if (mockupBtn) mockupBtn.classList.toggle('active', isActive);
-    if (panelMockupBtn) panelMockupBtn.classList.toggle('active', isActive);
+    [mockupBtn, panelMockupBtn].filter(Boolean).forEach(btn => {
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
     showToast(isActive ? '已开启桌面预览' : '已关闭桌面预览', 1000, 'devices');
   }
 
+  [mockupBtn, panelMockupBtn].filter(Boolean).forEach(btn => btn.setAttribute('aria-pressed', 'false'));
   if (mockupBtn) mockupBtn.addEventListener('click', toggleMockup);
   if (panelMockupBtn) panelMockupBtn.addEventListener('click', toggleMockup);
 
-  // 桌面端快捷全屏栏下载按钮
-  const quickDownloadBtn = document.getElementById('quickDownloadBtn');
-  if (quickDownloadBtn) quickDownloadBtn.addEventListener('click', downloadPNG);
-
-  // 12. 导出与下载
-  async function downloadPNG() {
-    showToast(`正在导出 ${state.targetW} × ${state.targetH} 高清壁纸...`, 2000, 'hourglass_top');
-    const blob = await exportToPNGBlob(state, state.targetW, state.targetH);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `material_you_${state.artMode}_${state.targetW}x${state.targetH}_${state.seed}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast(`已成功保存 ${state.targetW}×${state.targetH} 壁纸！`, 2500, 'check_circle');
-  }
-
-  function downloadSVG() {
-    exportToSVGFile(state, state.targetW, state.targetH);
-    showToast('已导出矢量 SVG！', 2000, 'check_circle');
-  }
-
-  async function copyClipboard() {
-    try {
-      showToast('正在渲染并复制到剪贴板...', 2000, 'hourglass_top');
-      await copyImageToClipboard(state, state.targetW, state.targetH);
-      showToast('已成功复制壁纸图片到剪贴板！', 2000, 'content_copy');
-    } catch {
-      showToast('复制失败，请点击下载保存图片', 2500, 'error');
-    }
-  }
-
-  document.getElementById('downloadPngBtn').addEventListener('click', downloadPNG);
-  document.getElementById('downloadSvgBtn').addEventListener('click', downloadSVG);
-  document.getElementById('copyClipboardBtn').addEventListener('click', copyClipboard);
-
-  // 13. 全局快捷键
-  window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    if (e.code === 'Space') {
-      e.preventDefault();
-      randomize();
-    } else if (e.key === 'h' || e.key === 'H') {
-      if (panel.classList.contains('collapsed')) openSheet(); else closeSheet();
-    } else if (e.key === 'm' || e.key === 'M') {
-      toggleMockup();
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-      e.preventDefault();
-      if (e.shiftKey) {
-        if (redoBtn) redoBtn.click();
-      } else {
-        if (undoBtn) undoBtn.click();
-      }
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
-      copyClipboard();
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-      e.preventDefault();
-      downloadPNG();
-    }
+  setupKeyboardShortcuts({
+    undo: () => undoBtn?.click(), redo: () => redoBtn?.click(),
+    downloadPNG, copyClipboard, randomize, togglePanel: toggleSheet, toggleMockup
   });
 
-  updateUndoRedoUI();
+  colorControls.sync();
+  // Restore every control from the same artwork state used by the renderer.
+  applySnapshot(snapshotWallpaper(state));
+
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    const url = createShareURL(state, location.href);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+      await navigator.clipboard.writeText(url);
+      showToast('作品链接已复制，可直接分享', 2200, 'link');
+    } catch {
+      const dialog = document.getElementById('shareDialog');
+      const input = document.getElementById('shareUrlInput');
+      input.value = url;
+      dialog.showModal();
+      input.focus(); input.select();
+    }
+  });
+  document.getElementById('closeShareDialogBtn').addEventListener('click', () => document.getElementById('shareDialog').close());
+
+  window.addEventListener('hashchange', () => {
+    try {
+      const snapshot = wallpaperFromHash(location.hash);
+      if (!snapshot) return;
+      history.push(snapshot);
+      applySnapshot(snapshot);
+      showToast('已载入分享作品', 2000, 'link');
+    } catch (error) { showToast(error.message, 3500, 'error'); }
+  });
 }

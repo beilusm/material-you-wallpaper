@@ -36,10 +36,22 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Install browsers for tests
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Browser regression tests
+        run: pnpm test:browser
+
+      - name: Firefox and WebKit regression tests
+        run: pnpm test:cross-browser
+
+      - name: Production build and subdirectory smoke test
+        run: pnpm test:production
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -1,113 +1,40 @@
-import { calculateBandPolygon, createRNG } from './geometry.js';
+import { createWallpaperScene } from './scene.js';
+import { pathToSVG } from './path.js';
+import { getNoiseTile, NOISE_TILE_SIZE } from './effects.js';
+import { downloadBlob } from './download.js';
 
-/**
- * 生成无限分辨率矢量 SVG 字符串 (支持所有艺术模式)
- */
 export function generateSVGString(state, width, height) {
-  const colors = [state.color2, state.color1];
-
-  let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">\n`;
-  svg += `  <title>Material You Wallpaper - ${state.artMode}</title>\n`;
-  svg += `  <rect width="${width}" height="${height}" fill="${colors[0]}"/>\n`;
-
-  if (state.artMode === 'pebbles') {
-    const rng = createRNG(state.seed);
-    const numPebbles = Math.max(3, state.bandCount + 1);
-    const minDim = Math.min(width, height);
-
-    for (let i = 0; i < numPebbles; i++) {
-      const cx = width * (0.2 + rng() * 0.6);
-      const cy = height * (0.2 + rng() * 0.6);
-      const baseR = minDim * (0.18 + rng() * 0.22) * (0.7 + state.curvature * 0.6);
-      const numPoints = 8 + Math.floor(rng() * 4);
-      const pts = [];
-      const rot = rng() * Math.PI * 2;
-
-      for (let j = 0; j < numPoints; j++) {
-        const theta = rot + (j * Math.PI * 2) / numPoints;
-        const rVar = 1 + (rng() - 0.5) * 0.35 * state.curvature;
-        const r = baseR * rVar;
-        pts.push({
-          x: cx + r * Math.cos(theta),
-          y: cy + r * Math.sin(theta)
-        });
-      }
-
-      let dStr = `M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)} `;
-      for (let k = 1; k < pts.length; k++) {
-        dStr += `L ${pts[k].x.toFixed(1)},${pts[k].y.toFixed(1)} `;
-      }
-      dStr += `Z`;
-
-      const fill = colors[i % colors.length];
-      svg += `  <path d="${dStr}" fill="${fill}" />\n`;
-    }
-  } else if (state.artMode === 'topography') {
-    const rng = createRNG(state.seed);
-    const cx = width * (0.35 + rng() * 0.3);
-    const cy = height * (0.35 + rng() * 0.3);
-    const maxR = Math.hypot(width, height) * 0.75;
-    const layers = Math.max(3, state.bandCount + 2);
-
-    for (let l = layers; l >= 1; l--) {
-      const fraction = l / layers;
-      const rBase = maxR * fraction;
-      const numPoints = 60;
-      const pFreq = 2 + state.harmonics;
-      const phase = rng() * Math.PI * 2;
-      let dStr = '';
-
-      for (let i = 0; i <= numPoints; i++) {
-        const theta = (i * Math.PI * 2) / numPoints;
-        const offset = (rBase * 0.15 * state.curvature) * Math.sin(theta * pFreq + phase)
-                     + (rBase * 0.08 * state.curvature) * Math.cos(theta * 2 - phase);
-        const r = Math.max(10, rBase + offset);
-        const px = (cx + r * Math.cos(theta)).toFixed(1);
-        const py = (cy + r * Math.sin(theta)).toFixed(1);
-        dStr += (i === 0 ? `M ${px},${py}` : ` L ${px},${py}`);
-      }
-      dStr += ` Z`;
-      svg += `  <path d="${dStr}" fill="${colors[l % colors.length]}" />\n`;
-    }
-  } else {
-    // 默认波浪模式
-    for (let i = 1; i < state.bandCount; i++) {
-      const waveParam = state.waveParams[i % state.waveParams.length];
-      const { polygon } = calculateBandPolygon({
-        index: i,
-        totalBands: state.bandCount,
-        width,
-        height,
-        angleDeg: state.angle,
-        curvature: state.curvature,
-        harmonics: state.harmonics,
-        waveParam,
-        steps: 160
-      });
-
-      let pathData = `M ${polygon[0].x.toFixed(1)},${polygon[0].y.toFixed(1)} `;
-      for (let j = 1; j < polygon.length; j++) {
-        pathData += `L ${polygon[j].x.toFixed(1)},${polygon[j].y.toFixed(1)} `;
-      }
-      pathData += `Z`;
-      svg += `  <path d="${pathData}" fill="${colors[i % colors.length]}" />\n`;
-    }
+  const scene = createWallpaperScene(state, width, height);
+  const defs = [];
+  const elements = [];
+  const format = n => Number(n.toFixed(4));
+  function fillAttribute(fill, id) {
+    if (typeof fill === 'string') return fill;
+    defs.push(`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${format(fill.x1)}" y1="${format(fill.y1)}" x2="${format(fill.x2)}" y2="${format(fill.y2)}"><stop offset="0" stop-color="${fill.colorA}"/><stop offset="1" stop-color="${fill.colorB}"/></linearGradient>`);
+    return `url(#${id})`;
   }
-
-  svg += `</svg>`;
-  return svg;
+  elements.push(`<rect width="${width}" height="${height}" fill="${fillAttribute(scene.background, 'background')}"/>`);
+  scene.layers.forEach((layer, index) => {
+    let filter = '';
+    if (layer.shadow) {
+      const { color, opacity, blur, x, y } = layer.shadow;
+      const margin = Math.ceil(blur * 3 + Math.max(Math.abs(x), Math.abs(y)));
+      defs.push(`<filter id="shadow-${index}" filterUnits="userSpaceOnUse" x="${-margin}" y="${-margin}" width="${width + margin * 2}" height="${height + margin * 2}" color-interpolation-filters="sRGB"><feDropShadow dx="${format(x)}" dy="${format(y)}" stdDeviation="${format(blur / 2)}" flood-color="${color}" flood-opacity="${opacity}"/></filter>`);
+      filter = ` filter="url(#shadow-${index})"`;
+    }
+    elements.push(`<path d="${pathToSVG(layer.path)}" fill="${fillAttribute(layer.fill, `gradient-${index}`)}"${filter}/>`);
+  });
+  if (scene.grain > 0.005) {
+    // Only the optional grain is a bitmap; all wallpaper shapes remain vector paths.
+    const tile = getNoiseTile(scene.seed).toDataURL('image/png');
+    defs.push(`<pattern id="grain" patternUnits="userSpaceOnUse" width="${NOISE_TILE_SIZE}" height="${NOISE_TILE_SIZE}"><image href="${tile}" width="${NOISE_TILE_SIZE}" height="${NOISE_TILE_SIZE}"/></pattern>`);
+    elements.push(`<rect width="${width}" height="${height}" fill="url(#grain)" opacity="${scene.grain}" style="mix-blend-mode:overlay"/>`);
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n<title>Material You Wallpaper - ${state.artMode}</title>\n<defs>${defs.join('\n')}</defs>\n<g style="isolation:isolate">${elements.join('\n')}</g>\n</svg>`;
 }
 
 export function exportToSVGFile(state, width, height, filename) {
-  const svgStr = generateSVGString(state, width, height);
-  const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename || `material_you_${state.artMode}_${width}x${height}_${state.seed}.svg`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const svg = generateSVGString(state, width, height);
+  downloadBlob(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
+    filename || `material_you_${state.artMode}_${width}x${height}_${state.seed}.svg`);
 }

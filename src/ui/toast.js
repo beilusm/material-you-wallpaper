@@ -5,14 +5,22 @@ export function showToast(message, duration = 2600, icon = null) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
     document.body.appendChild(toast);
   }
 
+  toast.replaceChildren();
   if (icon) {
-    toast.innerHTML = `<span class="material-symbols-rounded toast-icon">${icon}</span><span>${message}</span>`;
-  } else {
-    toast.textContent = message;
+    const symbol = document.createElement('span');
+    symbol.className = 'material-symbols-rounded toast-icon';
+    symbol.setAttribute('aria-hidden', 'true');
+    symbol.textContent = icon;
+    toast.appendChild(symbol);
   }
+  const text = document.createElement('span');
+  text.textContent = message;
+  toast.appendChild(text);
   toast.classList.add('show');
 
   if (toastTimer) clearTimeout(toastTimer);

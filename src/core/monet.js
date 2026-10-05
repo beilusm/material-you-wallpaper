@@ -1,96 +1,75 @@
-/**
- * Material You (Monet / Material 3) 动态色彩引擎
- * 模拟 Android Jetpack Compose 的 DynamicColorScheme 逻辑
- * 根据用户壁纸色彩实时计算完整的 M3 Tonal Palette 规范色阶
- */
+import { hexToRgb, rgbToHsl, hslToHex, contrastRatio } from './color.js';
 
-function hexToRgb(hex) {
-  let c = hex.replace('#', '');
-  if (c.length === 3) c = c.split('').map(x => x + x).join('');
-  const num = parseInt(c, 16);
-  return {
-    r: (num >> 16) & 255,
-    g: (num >> 8) & 255,
-    b: num & 255
-  };
-}
+const hex = color => typeof color === 'string' ? color : hslToHex(color.h, color.s, color.l);
+const css = color => typeof color === 'string' ? color : `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
 
-function rgbToHsl(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0, l = (max + min) / 2;
-
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h = Math.round(h * 60);
+function withContrast(color, backgrounds, lighter, minimum = 4.6) {
+  const meets = lightness => backgrounds.every(background =>
+    contrastRatio(hex({ ...color, l: lightness }), hex(background)) >= minimum);
+  if (meets(color.l)) return color;
+  let good = lighter ? 100 : 0, bad = color.l;
+  for (let i = 0; i < 16; i++) {
+    const mid = (good + bad) / 2;
+    if (meets(mid)) good = mid; else bad = mid;
   }
-  return { h, s: Math.round(s * 100), l: Math.round(l * 100) };
+  // Round toward the passing side and allow headroom for CSS color quantization.
+  const l = (lighter ? Math.ceil(good * 100) : Math.floor(good * 100)) / 100;
+  return { ...color, l };
 }
 
-/**
- * 依据壁纸主色推导 Compose Material 3 规范色彩 Token
- */
-export function applyMaterialTheme(seedHex, isDark = true) {
+/** HSL interface palette derived from wallpaper colors, with text contrast adjustments. */
+export function createMaterialTheme(seedHex, isDark = true) {
   const { r, g, b } = hexToRgb(seedHex);
   const { h, s } = rgbToHsl(r, g, b);
+  const primary = Math.round(Math.min(65, Math.max(30, s)));
+  const neutral = Math.min(14, Math.max(4, Math.round(s * 0.2)));
+  const secondary = Math.round(primary * 0.6), container = Math.round(primary * 0.55);
+  const tone = (saturation, lightness) => ({ h, s: saturation, l: lightness });
+  const colors = {
+    primary: tone(primary, isDark ? 78 : 38),
+    'on-primary': isDark ? tone(primary + 15, 15) : '#ffffff',
+    'primary-container': tone(primary, isDark ? 28 : 88),
+    'on-primary-container': tone(isDark ? primary : primary + 15, isDark ? 90 : 12),
+    secondary: tone(secondary, isDark ? 74 : 42),
+    'on-secondary': isDark ? tone(secondary, 18) : '#ffffff',
+    'secondary-container': tone(container, isDark ? 26 : 88),
+    'on-secondary-container': tone(container, isDark ? 88 : 14),
+    surface: tone(neutral, isDark ? 9 : 98),
+    'on-surface': tone(neutral, isDark ? 90 : 12),
+    'surface-dim': tone(neutral, isDark ? 7 : 92),
+    'surface-container-lowest': isDark ? tone(neutral, 6) : '#ffffff',
+    'surface-container-low': tone(neutral, isDark ? 11 : 96),
+    'surface-container': tone(neutral, isDark ? 14 : 94),
+    'surface-container-high': tone(neutral, isDark ? 18 : 92),
+    'surface-container-highest': tone(neutral, isDark ? 23 : 90),
+    outline: tone(neutral, isDark ? 45 : 55),
+    'outline-variant': tone(neutral, isDark ? 25 : 80),
+    'inverse-surface': tone(neutral, isDark ? 90 : 20),
+    'inverse-on-surface': tone(neutral, isDark ? 16 : 95),
+    'inverse-primary': tone(primary, isDark ? 38 : 78)
+  };
+  const highest = colors['surface-container-highest'];
+  colors.primary = withContrast(colors.primary, [highest, colors['on-primary']], isDark);
+  colors.secondary = withContrast(colors.secondary, [highest, colors['on-secondary']], isDark);
+  colors['on-primary-container'] = withContrast(colors['on-primary-container'], [colors['primary-container']], isDark);
+  colors['on-secondary-container'] = withContrast(colors['on-secondary-container'], [colors['secondary-container']], isDark);
+  colors['inverse-primary'] = withContrast(colors['inverse-primary'], [colors['inverse-surface']], !isDark);
+  colors.outline = withContrast(colors.outline, [highest], isDark, 3.1);
+  return { colorScheme: isDark ? 'dark' : 'light', colors: Object.fromEntries(
+    Object.entries(colors).map(([name, color]) => [name, css(color)])
+  ) };
+}
 
-  // 饱和度自适应校正
-  const primaryChroma = Math.min(65, Math.max(30, s));
-  const neutralChroma = Math.min(14, Math.max(4, Math.round(s * 0.2)));
-
+export function applyMaterialTheme(seedHex, isDark = true) {
+  const theme = createMaterialTheme(seedHex, isDark);
   const root = document.documentElement;
-
-  if (isDark) {
-    // Jetpack Compose M3 Dark ColorScheme
-    root.style.setProperty('--md-sys-color-primary', `hsl(${h}, ${primaryChroma}%, 78%)`);
-    root.style.setProperty('--md-sys-color-on-primary', `hsl(${h}, ${primaryChroma + 15}%, 15%)`);
-    root.style.setProperty('--md-sys-color-primary-container', `hsl(${h}, ${primaryChroma}%, 28%)`);
-    root.style.setProperty('--md-sys-color-on-primary-container', `hsl(${h}, ${primaryChroma}%, 90%)`);
-
-    root.style.setProperty('--md-sys-color-secondary', `hsl(${h}, ${Math.round(primaryChroma * 0.6)}%, 74%)`);
-    root.style.setProperty('--md-sys-color-on-secondary', `hsl(${h}, ${Math.round(primaryChroma * 0.6)}%, 18%)`);
-    root.style.setProperty('--md-sys-color-secondary-container', `hsl(${h}, ${Math.round(primaryChroma * 0.55)}%, 26%)`);
-    root.style.setProperty('--md-sys-color-on-secondary-container', `hsl(${h}, ${Math.round(primaryChroma * 0.55)}%, 88%)`);
-
-    root.style.setProperty('--md-sys-color-surface', `hsl(${h}, ${neutralChroma}%, 9%)`);
-    root.style.setProperty('--md-sys-color-on-surface', `hsl(${h}, ${neutralChroma}%, 90%)`);
-    root.style.setProperty('--md-sys-color-surface-dim', `hsl(${h}, ${neutralChroma}%, 7%)`);
-    root.style.setProperty('--md-sys-color-surface-container-lowest', `hsl(${h}, ${neutralChroma}%, 6%)`);
-    root.style.setProperty('--md-sys-color-surface-container-low', `hsl(${h}, ${neutralChroma}%, 11%)`);
-    root.style.setProperty('--md-sys-color-surface-container', `hsl(${h}, ${neutralChroma}%, 14%)`);
-    root.style.setProperty('--md-sys-color-surface-container-high', `hsl(${h}, ${neutralChroma}%, 18%)`);
-    root.style.setProperty('--md-sys-color-surface-container-highest', `hsl(${h}, ${neutralChroma}%, 23%)`);
-
-    root.style.setProperty('--md-sys-color-outline', `hsl(${h}, ${neutralChroma}%, 45%)`);
-    root.style.setProperty('--md-sys-color-outline-variant', `hsl(${h}, ${neutralChroma}%, 25%)`);
-    root.style.setProperty('--md-sys-color-inverse-surface', `hsl(${h}, ${neutralChroma}%, 90%)`);
-    root.style.setProperty('--md-sys-color-inverse-on-surface', `hsl(${h}, ${neutralChroma}%, 16%)`);
-  } else {
-    // Jetpack Compose M3 Light ColorScheme
-    root.style.setProperty('--md-sys-color-primary', `hsl(${h}, ${primaryChroma}%, 38%)`);
-    root.style.setProperty('--md-sys-color-on-primary', `#ffffff`);
-    root.style.setProperty('--md-sys-color-primary-container', `hsl(${h}, ${primaryChroma}%, 88%)`);
-    root.style.setProperty('--md-sys-color-on-primary-container', `hsl(${h}, ${primaryChroma + 15}%, 12%)`);
-
-    root.style.setProperty('--md-sys-color-secondary', `hsl(${h}, ${Math.round(primaryChroma * 0.6)}%, 42%)`);
-    root.style.setProperty('--md-sys-color-on-secondary', `#ffffff`);
-    root.style.setProperty('--md-sys-color-secondary-container', `hsl(${h}, ${Math.round(primaryChroma * 0.55)}%, 88%)`);
-    root.style.setProperty('--md-sys-color-on-secondary-container', `hsl(${h}, ${Math.round(primaryChroma * 0.55)}%, 14%)`);
-
-    root.style.setProperty('--md-sys-color-surface', `hsl(${h}, ${neutralChroma}%, 98%)`);
-    root.style.setProperty('--md-sys-color-on-surface', `hsl(${h}, ${neutralChroma}%, 12%)`);
-    root.style.setProperty('--md-sys-color-surface-container-low', `hsl(${h}, ${neutralChroma}%, 96%)`);
-    root.style.setProperty('--md-sys-color-surface-container', `hsl(${h}, ${neutralChroma}%, 94%)`);
-    root.style.setProperty('--md-sys-color-surface-container-high', `hsl(${h}, ${neutralChroma}%, 92%)`);
-    root.style.setProperty('--md-sys-color-surface-container-highest', `hsl(${h}, ${neutralChroma}%, 90%)`);
-
-    root.style.setProperty('--md-sys-color-outline', `hsl(${h}, ${neutralChroma}%, 55%)`);
-    root.style.setProperty('--md-sys-color-outline-variant', `hsl(${h}, ${neutralChroma}%, 80%)`);
+  const switching = root.style.colorScheme !== theme.colorScheme;
+  if (switching) root.classList.add('theme-switching');
+  root.style.colorScheme = theme.colorScheme;
+  for (const [name, value] of Object.entries(theme.colors)) root.style.setProperty(`--md-sys-color-${name}`, value);
+  if (switching) {
+    // Commit inverted text/background roles without passing through matching gray colors.
+    void root.offsetHeight;
+    root.classList.remove('theme-switching');
   }
 }
