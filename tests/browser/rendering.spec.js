@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures.js';
 
-for (const artMode of ['waves', 'pebbles', 'topography']) {
+for (const artMode of ['waves', 'pebbles', 'topography', 'arcs', 'bloom', 'hills']) {
   for (const [name, effects] of [
     ['flat', {}], ['gradient', { useGradient: true }], ['shadow', { hasShadow: true }],
     ['all effects', { useGradient: true, hasShadow: true, grain: 0.25 }]

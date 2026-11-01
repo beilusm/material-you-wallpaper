@@ -7,7 +7,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'public' / 'fonts'
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
-ICONS = sorted(set('''add_photo_alternate aspect_ratio auto_awesome bubble_chart casino category check_circle content_copy dark_mode devices dock_to_right download error folder hourglass_top image_search language laptop light_mode link palette polyline redo settings smartphone swap_horiz terminal terrain tune undo waves'''.split()))
+ICONS = sorted(set('''add_photo_alternate aspect_ratio auto_awesome bubble_chart casino category check_circle filter_vintage content_copy dark_mode devices dock_to_right download error folder hourglass_top image_search language laptop light_mode link palette polyline redo settings smartphone swap_horiz terminal landscape terrain tune undo waves wb_twilight'''.split()))
 
 
 def fetch(url):

@@ -174,10 +174,11 @@
 
 /* 2. Compose M3 SegmentedButton */
 .m3-segmented-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   width: 100%;
   border: 1px solid var(--md-sys-color-outline);
-  border-radius: var(--md-shape-corner-full);
+  border-radius: var(--md-shape-corner-large);
   overflow: hidden;
   background: transparent;
 }
@@ -202,8 +203,11 @@
 .m3-segmented-btn .material-symbols-rounded {
   font-size: 18px;
 }
-.m3-segmented-btn:last-child {
+.m3-segmented-btn:nth-child(3n) {
   border-right: none;
+}
+.m3-segmented-btn:nth-child(-n + 3) {
+  border-bottom: 1px solid var(--md-sys-color-outline);
 }
 .m3-segmented-btn:hover {
   background: var(--md-state-hover);

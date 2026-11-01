@@ -36,3 +36,18 @@ export function tracePath(ctx, path) {
 export function pathToSVG(path) {
   return path.map(([command, ...args]) => command + args.map(n => Number(n.toFixed(4))).join(' ')).join(' ');
 }
+
+/** Circle as cubic Bézier arcs; eight segments stay within 0.0005% of the true radius. */
+export function circlePath(cx, cy, r, segments = 8) {
+  const step = Math.PI * 2 / segments, k = 4 / 3 * Math.tan(step / 4) * r;
+  const path = [['M', cx + r, cy]];
+  for (let i = 0; i < segments; i++) {
+    const a = i * step, b = a + step;
+    path.push(['C',
+      cx + r * Math.cos(a) - k * Math.sin(a), cy + r * Math.sin(a) + k * Math.cos(a),
+      cx + r * Math.cos(b) + k * Math.sin(b), cy + r * Math.sin(b) - k * Math.cos(b),
+      cx + r * Math.cos(b), cy + r * Math.sin(b)]);
+  }
+  path.push(['Z']);
+  return path;
+}

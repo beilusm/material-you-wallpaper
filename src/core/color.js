@@ -44,3 +44,10 @@ export function hslToHex(h, s, l) {
   };
   return `#${channel(0)}${channel(8)}${channel(4)}`;
 }
+
+/** Per-channel blend of sRGB values; t = 0 returns colorA and t = 1 returns colorB. */
+export function mixHex(colorA, colorB, t) {
+  const a = hexToRgb(colorA), b = hexToRgb(colorB);
+  const channel = key => Math.round(a[key] + (b[key] - a[key]) * t).toString(16).padStart(2, '0');
+  return `#${channel('r')}${channel('g')}${channel('b')}`;
+}

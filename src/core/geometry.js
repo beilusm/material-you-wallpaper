@@ -97,3 +97,12 @@ export function calculateBandPolygon({
     Ln
   };
 }
+
+/**
+ * 平滑周期轮廓 f(θ) ∈ [-1, 1]；仅使用低阶正弦项，r = R(1 + a·f) 在 a < 1 时不会自相交
+ */
+export function createRadialProfile(rng, orders) {
+  const terms = orders.map((order, i) => ({ order, phase: rng() * Math.PI * 2, weight: (0.5 + rng() * 0.5) / (i + 1) }));
+  const total = terms.reduce((sum, term) => sum + term.weight, 0);
+  return theta => terms.reduce((sum, term) => sum + term.weight * Math.sin(term.order * theta + term.phase), 0) / total;
+}

@@ -32,7 +32,7 @@ test('stalled compatibility encoding times out and releases its canvas', async (
   expect(downloads).toBe(1);
 });
 
-for (const mode of ['waves', 'pebbles', 'topography']) {
+for (const mode of ['waves', 'pebbles', 'topography', 'arcs', 'bloom', 'hills']) {
   for (const [width, height] of [[480, 320], [320, 640]]) {
     test(`${mode} ${width}×${height}: worker PNG keeps every rendered pixel`, async ({ page }) => {
       await page.goto('/');

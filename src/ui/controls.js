@@ -287,12 +287,17 @@ export function setupControls(state, onStateChange, mockupManager) {
 
   function syncModeControls() {
     const mode = state.artMode;
-    const labels = { waves: '条带数量', pebbles: '圆石数量', topography: '等高线层数' };
+    const labels = { waves: '条带数量', pebbles: '圆石数量', topography: '等高线层数',
+      arcs: '光环层数', bloom: '花瓣层数', hills: '山峦层数' };
+    const extra = { waves: 0, pebbles: 1, topography: 2, arcs: 1, bloom: 1, hills: 1 };
+    const freqText = {
+      waves: freqLabels, topography: ['三重起伏', '四重起伏', '五重起伏'],
+      bloom: ['六瓣', '八瓣', '十二瓣'], hills: ['平缓', '起伏', '嶙峋']
+    };
     document.getElementById('bandCountLabel').textContent = labels[mode];
-    document.getElementById('bandCountVal').textContent = state.bandCount + (mode === 'pebbles' ? 1 : mode === 'topography' ? 2 : 0);
-    document.getElementById('freqControl').hidden = mode === 'pebbles';
-    document.getElementById('freqVal').textContent = mode === 'topography'
-      ? ['三重起伏', '四重起伏', '五重起伏'][state.harmonics - 1] : freqLabels[state.harmonics - 1];
+    document.getElementById('bandCountVal').textContent = state.bandCount + extra[mode];
+    document.getElementById('freqControl').hidden = !freqText[mode];
+    if (freqText[mode]) document.getElementById('freqVal').textContent = freqText[mode][state.harmonics - 1];
     document.getElementById('angleLabel').textContent = mode === 'waves' ? '流线倾斜角度' : '渐变方向';
     angleSlider.disabled = mode !== 'waves' && !state.useGradient;
     angleSlider.closest('.m3-slider-item').classList.toggle('control-disabled', angleSlider.disabled);

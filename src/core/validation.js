@@ -1,6 +1,7 @@
 export const MAX_OUTPUT_DIMENSION = 16384;
 export const MAX_OUTPUT_PIXELS = 64000000;
 export const MAX_SEED = 2147483646;
+export const ART_MODES = Object.freeze(['waves', 'pebbles', 'topography', 'arcs', 'bloom', 'hills']);
 
 const renderRules = {
   bandCount: [2, 10, true], angle: [-360, 360, false], curvature: [0, 1, false],
@@ -24,7 +25,7 @@ export function validateDimensions(width, height) {
 
 export function validateArtworkParameters(value, { editable = false } = {}) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new TypeError('作品数据格式无效');
-  if (!['waves', 'pebbles', 'topography'].includes(value.artMode)) throw new TypeError('未知艺术形态');
+  if (!ART_MODES.includes(value.artMode)) throw new TypeError('未知艺术形态');
   if (![value.color1, value.color2].every(color => typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color))) {
     throw new TypeError('作品颜色必须使用六位十六进制色值');
   }
