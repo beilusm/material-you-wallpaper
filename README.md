@@ -20,6 +20,19 @@
 
 图片最大 40 MB。所有字体均随站点提供，无需访问外部字体服务；字体许可证见 [public/fonts](public/fonts/README.md)。
 
+## GitHub 主页随机横幅
+
+`scripts/generate-profile.mjs` 直接复用六种风格的几何、SVG 导出和作品分享逻辑，生成带名字和标语的横幅、无文字原图和对应分享链接。只需 Node.js 22，无需浏览器或额外依赖；生成作品关闭颗粒纹理，避免依赖 Canvas。
+
+目标主页仓库的 `README.md` 需包含一组 `<!-- WALLPAPER:START -->` / `<!-- WALLPAPER:END -->` 注释，脚本仅更新其中内容：
+
+```bash
+node scripts/generate-profile.mjs --profile /path/to/beilusm
+node scripts/generate-profile.mjs --profile /path/to/beilusm --seed 42
+```
+
+结果写入主页仓库的 `assets/wallpaper/`，文件名随内容变化以减少旧图缓存，只保留当前生成的两张图和参数记录。配套的每 6 小时定时工作流位于 [beilusm 主页仓库](https://github.com/beilusm/beilusm)，由主页仓库自己的令牌提交更新，不需要跨仓库写入权限。点击横幅可在壁纸工坊继续编辑同一作品，文字遮罩仅属于主页展示。
+
 ## 快捷键
 
 | 快捷键 | 操作 |
