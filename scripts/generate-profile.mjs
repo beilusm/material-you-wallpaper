@@ -14,8 +14,13 @@ const START = '<!-- WALLPAPER:START -->';
 const END = '<!-- WALLPAPER:END -->';
 const SITE = 'https://beilusm.github.io/material-you-wallpaper/';
 const MODE_NAMES = {
-  waves: '极简波浪', pebbles: '有机圆石', topography: '等高纸艺',
-  arcs: '日出光环', bloom: '层叠花窗', hills: '远山层峦'
+  waves: 'Minimal Waves', pebbles: 'Organic Pebbles', topography: 'Paper Topography',
+  arcs: 'Sunrise Arcs', bloom: 'Layered Bloom', hills: 'Distant Hills'
+};
+const PALETTE_NAMES = {
+  sage: 'Sage', matcha: 'Matcha', lavender: 'Lavender', glacier: 'Glacier Blue',
+  apricot: 'Warm Apricot', sakura: 'Sakura Pink', mist: 'Golden Mist', clay: 'Clay',
+  pine: 'Pine Forest', ocean: 'Deep Ocean', dark: 'Midnight Green', slate: 'Slate'
 };
 
 export function createProfileArtwork(seed = randomInt(1, MAX_SEED + 1)) {
@@ -50,7 +55,7 @@ export function createProfileArtwork(seed = randomInt(1, MAX_SEED + 1)) {
 </g>
 </svg>`);
   return { state, wallpaper, banner, shareURL: createShareURL(state, SITE),
-    mode: MODE_NAMES[state.artMode], palette: palette.name };
+    mode: MODE_NAMES[state.artMode], palette: PALETTE_NAMES[palette.id] };
 }
 
 export function replaceWallpaperBlock(readme, block) {
@@ -71,10 +76,10 @@ export async function updateProfile(profileDir, { seed, now = new Date() } = {})
   const bannerName = `banner-${id}.svg`, wallpaperName = `wallpaper-${id}.svg`;
   const assetPath = `assets/wallpaper/${bannerName}`;
   const timestamp = now.toISOString();
-  const block = `[![beilusm — 随机生成的 Material You 壁纸，点击编辑同款](${assetPath})](${artwork.shareURL})\n\n` +
+  const block = `[![beilusm — a randomly generated Material You wallpaper. Click to edit.](${assetPath})](${artwork.shareURL})\n\n` +
     `<p align="center">\n<b>${artwork.mode} · ${artwork.palette}</b><br>\n` +
-    `每 6 小时换一张 · <a href="${artwork.shareURL}">编辑 / 下载同款壁纸 ↗</a><br>\n` +
-    `<sub>最近生成：${timestamp.slice(0, 16).replace('T', ' ')} UTC</sub>\n</p>`;
+    `A new wallpaper every 6 hours · <a href="${artwork.shareURL}">Edit / download this wallpaper ↗</a><br>\n` +
+    `<sub>Last generated: ${timestamp.slice(0, 16).replace('T', ' ')} UTC</sub>\n</p>`;
   // Validate before writing any assets; other README sections are preserved.
   const updatedReadme = replaceWallpaperBlock(readme, block);
   const assetDir = join(profileDir, 'assets/wallpaper');
